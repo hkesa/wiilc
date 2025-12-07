@@ -897,11 +897,11 @@ https://gemini.google.com/share/6802d099bb3c
 
     </script>
 
-    <!-- 1. 引入 Firebase 核心 (Compat 版) -->
-<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"></script>
+    <!-- 1. Firebase 核心 (必須先放這個) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 
-<!-- 2. 引入 Firestore 資料庫 (Compat 版) -->
-<script src="https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js"></script>
+<!-- 2. Firestore 資料庫 (再放這個) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
 
 <script>
   // 3. 貼上您的 firebaseConfig 設定 (從後台複製來的 apiKey 那一段)
