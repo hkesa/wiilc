@@ -1,3 +1,5 @@
+https://gemini.google.com/share/6802d099bb3c
+
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -894,5 +896,31 @@
         }
 
     </script>
+
+    <!-- 1. 引入 Firebase 核心 (Compat 版) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+
+<!-- 2. 引入 Firestore 資料庫 (Compat 版) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+<script>
+  // 3. 貼上您的 firebaseConfig 設定 (從後台複製來的 apiKey 那一段)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
+    authDomain: "wiilc-family.firebaseapp.com",
+    projectId: "wiilc-family",
+    storageBucket: "wiilc-family.firebasestorage.app",
+    messagingSenderId: "855894103830",
+    appId: "1:855894103830:web:12245d01c942ed803ba237"
+  };
+
+  // 4. 初始化 Firebase
+  firebase.initializeApp(firebaseConfig);
+
+  // 5. 建立資料庫連線變數 (之後新增/讀取都用這個 db)
+  const db = firebase.firestore();
+</script>
+    
 </body>
 </html>
+
