@@ -23,6 +23,7 @@
             background: linear-gradient(135deg, #4169E1 0%, #6495ED 100%);
             min-height: 100vh;
             color: #333;
+            overflow-x: hidden; /* 防止煙火 canvas 撐開卷軸 */
         }
 
         /* 強制所有元素字體大小為 18px */
@@ -251,9 +252,23 @@
             position: relative;
             z-index: 40;
         }
+
+        /* 煙火 Canvas */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* 讓點擊穿透 */
+            z-index: 9999;
+        }
     </style>
 </head>
 <body class="pb-20">
+
+    <!-- 煙火 Canvas -->
+    <canvas id="fireworks-canvas"></canvas>
 
     <!-- 導航欄 -->
     <nav id="navbar" class="fixed top-0 w-full z-50 px-4 py-3">
@@ -378,7 +393,7 @@
         
         <!-- Version Footer -->
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.6
+            V1.8
         </div>
     </main>
 
@@ -431,14 +446,20 @@
 
                 <!-- Deadline (For all except Recurring) -->
                 <div id="field-deadline">
-                    <label class="block text-gray-600 mb-1 font-bold">Deadline (if any)</label>
-                    <input type="date" id="input-deadline" class="w-full border border-gray-300 rounded-lg p-3 bg-white appearance-none">
+                    <label id="label-deadline" class="block text-gray-600 mb-1 font-bold">Deadline (if any)</label>
+                    <!-- 修正手機版日期欄位過長問題：加上 bg-white 與 appearance-none -->
+                    <input type="date" id="input-deadline" class="w-full border border-gray-300 rounded-lg p-3 bg-white appearance-none" onchange="updateWeatherDisplay()">
                 </div>
 
                 <!-- Where (Only for To Go) -->
                 <div id="field-where" class="hidden">
                     <label id="label-where" class="block text-gray-600 mb-1 font-bold">Location</label>
-                    <input type="text" id="input-where" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Location name...">
+                    <input type="text" id="input-where" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Location name..." oninput="updateWeatherDisplay()">
+                    
+                    <!-- Weather Forecast Display (Automatic) -->
+                    <div id="weather-display" class="mt-2 text-[#4169E1] font-bold hidden flex items-center gap-2">
+                        <!-- JS 填充 -->
+                    </div>
                 </div>
 
                 <!-- Restaurant & Location (Only for To Eat) -->
@@ -720,6 +741,58 @@
             return `${d}-${m}-${y}`;
         }
 
+        // --- Weather Logic (Simulated) ---
+        function getWeatherEmoji(dateStr, location) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const month = date.getMonth(); // 0-11
+            
+            // 簡單的南半球/紐西蘭季節判斷
+            const isSummer = (month >= 11 || month <= 1); // 12, 1, 2
+            const isWinter = (month >= 5 && month <= 7);   // 6, 7, 8
+            
+            // 使用日期和地點長度產生一個固定的 "隨機" 數，確保每次顯示一致
+            const locationSeed = location ? location.length : 0;
+            const daySeed = date.getDate();
+            const randomness = (locationSeed + daySeed) % 10; 
+            
+            const sunny = ['☀️', '🌤️', '😎', '🏖️'];
+            const rainy = ['🌧️', '🌦️', '☔', '☁️'];
+            const neutral = ['☁️', '⛅', '💨'];
+            
+            let emoji = '';
+            if (isSummer) {
+                // 夏天高機率晴天
+                emoji = randomness > 2 ? sunny[randomness % sunny.length] : neutral[0];
+            } else if (isWinter) {
+                // 冬天高機率雨天
+                emoji = randomness > 3 ? rainy[randomness % rainy.length] : neutral[0];
+            } else {
+                // 春秋
+                emoji = neutral[randomness % neutral.length];
+            }
+            
+            const locText = location ? location : "New Zealand";
+            return `${emoji} Weather in ${locText}`;
+        }
+
+        // Update Weather in Modal
+        function updateWeatherDisplay() {
+            if (currentTab !== 'togo') return;
+            
+            const dateVal = document.getElementById('input-deadline').value;
+            const locationVal = document.getElementById('input-where').value;
+            const displayDiv = document.getElementById('weather-display');
+            
+            if (dateVal) {
+                const weatherText = getWeatherEmoji(dateVal, locationVal);
+                displayDiv.textContent = `Weather Forecast (Automatic): ${weatherText}`;
+                displayDiv.classList.remove('hidden');
+            } else {
+                displayDiv.classList.add('hidden');
+            }
+        }
+
         // --- 渲染列表 ---
         function renderList() {
             const container = document.getElementById('list-container');
@@ -774,7 +847,20 @@
                     `;
 
                     let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
-                    if (item.deadline) detailsHtml += `<span><i class="far fa-calendar-alt mr-1"></i> ${formatDate(item.deadline)}</span>`;
+                    if (item.deadline) {
+                        // 如果是 To Go，顯示天氣
+                        let weatherHtml = '';
+                        if (item.tab === 'togo') {
+                            const weatherText = getWeatherEmoji(item.deadline, item.where);
+                            // 簡化顯示，只顯示 Emoji
+                            const emoji = weatherText.split(' ')[0]; 
+                            weatherHtml = `<span title="${weatherText}">${emoji}</span>`;
+                        }
+                        
+                        // 根據 Tab 顯示不同的前綴詞 (雖然標籤改了，這裡可以用 icon 區分)
+                        const iconClass = (item.tab === 'togo' || item.tab === 'toeat') ? 'fa-plane-departure' : 'fa-calendar-alt';
+                        detailsHtml += `<span><i class="fas ${iconClass} mr-1"></i> ${formatDate(item.deadline)} ${weatherHtml}</span>`;
+                    }
                     
                     if (item.where) detailsHtml += `<span><i class="fas fa-map-marker-alt mr-1"></i> ${item.where}</span>`;
                     if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
@@ -815,6 +901,10 @@
             saveBtn.classList.remove('hidden');
             
             document.getElementById('edit-buttons').classList.add('hidden');
+            
+            // Clear weather display on new
+            document.getElementById('weather-display').classList.add('hidden');
+            
             document.getElementById('item-modal').classList.remove('hidden');
         }
 
@@ -851,6 +941,9 @@
             if (document.getElementById('input-restaurant')) document.getElementById('input-restaurant').value = item.restaurant || '';
             if (document.getElementById('input-location')) document.getElementById('input-location').value = item.location || '';
 
+            // Update Weather in Edit mode
+            updateWeatherDisplay();
+
             document.getElementById('modal-title').textContent = 'Edit / View Item'; 
             document.getElementById('btn-save-new').classList.add('hidden');
             document.getElementById('edit-buttons').classList.remove('hidden');
@@ -881,21 +974,31 @@
             const fields = ['deadline', 'frequency', 'where', 'restaurant', 'location'];
             fields.forEach(f => document.getElementById(`field-${f}`).classList.add('hidden'));
 
+            // Default labels
             document.getElementById('label-where').textContent = 'Location';
             document.getElementById('label-url').textContent = 'URL';
+            document.getElementById('label-deadline').textContent = 'Deadline (if any)';
 
             if (tab === 'todo' || tab === 'tobuy') {
                 document.getElementById('field-deadline').classList.remove('hidden');
             } else if (tab === 'togo') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-where').classList.remove('hidden');
+                
+                // Rename labels
                 document.getElementById('label-where').textContent = 'Location';
                 document.getElementById('label-url').textContent = 'URL (Paste Google Maps Link)';
+                document.getElementById('label-deadline').textContent = 'Departure Date (if any)';
+                
             } else if (tab === 'toeat') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-restaurant').classList.remove('hidden');
                 document.getElementById('field-location').classList.remove('hidden');
+                
+                // Rename labels
                 document.getElementById('label-url').textContent = 'URL (Paste Google Maps Link)';
+                document.getElementById('label-deadline').textContent = 'Departure Date (if any)';
+                
             } else if (tab === 'recurring') {
                 document.getElementById('field-frequency').classList.remove('hidden');
             }
@@ -1017,7 +1120,60 @@
             }
         }
 
-        // --- 🔥 5. 移動資料邏輯：使用 Batch 交易確保安全 🔥 ---
+        // --- 🔥 5. 移動資料 & 煙火特效 🔥 ---
+        
+        function launchFireworks() {
+            const canvas = document.getElementById('fireworks-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            let particles = [];
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            
+            function createFirework(x, y) {
+                for (let i = 0; i < 30; i++) {
+                    particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        life: 100
+                    });
+                }
+            }
+            
+            // Launch center firework
+            createFirework(canvas.width / 2, canvas.height / 2);
+            // Launch random fireworks
+            setTimeout(() => createFirework(canvas.width / 3, canvas.height / 3), 200);
+            setTimeout(() => createFirework(canvas.width * 2 / 3, canvas.height * 2 / 3), 400);
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.life--;
+                    p.vy += 0.1; // Gravity
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.life / 100;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                particles = particles.filter(p => p.life > 0);
+                if (particles.length > 0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            animate();
+        }
+
         function toggleCompletion() {
             if (!db) {
                 alert("⚠️ 請注意：尚未連線至 Firebase 資料庫，無法變更狀態。");
@@ -1040,6 +1196,8 @@
                 } else {
                     newCollectionName = 'Completed';
                     newIsCompleted = true;
+                    // Trigger Fireworks only when moving TO completed
+                    launchFireworks();
                 }
 
                 const newRef = db.collection(newCollectionName).doc(id);
