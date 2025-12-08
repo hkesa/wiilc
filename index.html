@@ -1,5 +1,3 @@
-https://gemini.google.com/share/6802d099bb3c
-
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
@@ -12,6 +10,10 @@ https://gemini.google.com/share/6802d099bb3c
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     <!-- 引入 FontAwesome 圖標 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 🔥 1. 引入 Firebase 核心與資料庫 (Compat版本) 🔥 -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         /* 全局字體設定 */
@@ -233,6 +235,22 @@ https://gemini.google.com/share/6802d099bb3c
             font-weight: bold;
             background-color: #edf2ff;
         }
+        
+        /* 離線警告橫幅 */
+        #offline-banner {
+            background-color: #FFF3CD;
+            color: #856404;
+            border: 1px solid #FFEEBA;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 16px !important;
+            display: none;
+            margin-top: 80px; /* Adjust for fixed navbar */
+            margin-bottom: -80px; /* Offset margin */
+            position: relative;
+            z-index: 40;
+        }
     </style>
 </head>
 <body class="pb-20">
@@ -279,6 +297,12 @@ https://gemini.google.com/share/6802d099bb3c
             </div>
         </div>
     </nav>
+
+    <!-- Offline Warning Banner -->
+    <div id="offline-banner">
+        ⚠️ 尚未連線 Firebase - 資料無法儲存<br>
+        <span style="font-size: 14px; font-weight: normal;">請編輯程式碼填入您的 API Key 以啟用完整功能</span>
+    </div>
 
     <!-- 主要內容區 -->
     <main class="max-w-6xl mx-auto mt-28 px-4">
@@ -342,13 +366,12 @@ https://gemini.google.com/share/6802d099bb3c
         <div class="glass-card overflow-hidden p-0 mb-6">
             <div class="overflow-x-auto">
                 <table class="w-full">
-                    <!-- Removed thead as requested -->
                     <tbody id="list-container">
                         <!-- JS 將會動態填充這裡 -->
                     </tbody>
                 </table>
                 <div id="empty-state" class="hidden text-center py-10 text-gray-500">
-                    No items found.
+                    Loading items...
                 </div>
             </div>
         </div>
@@ -409,7 +432,6 @@ https://gemini.google.com/share/6802d099bb3c
                 <!-- Deadline (For all except Recurring) -->
                 <div id="field-deadline">
                     <label class="block text-gray-600 mb-1 font-bold">Deadline (if any)</label>
-                    <!-- Added bg-white and appearance-none to fix mobile visual inconsistency -->
                     <input type="date" id="input-deadline" class="w-full border border-gray-300 rounded-lg p-3 bg-white appearance-none">
                 </div>
 
@@ -462,14 +484,71 @@ https://gemini.google.com/share/6802d099bb3c
     </div>
 
     <script>
-        // --- 變數與狀態 ---
-        let items = JSON.parse(localStorage.getItem('willcFamilyItems')) || [];
+        // --- 變數與狀態初始化 (移至最上方以避免 ReferenceError) ---
+        let items = [];
         let currentTab = 'toeat'; 
         let currentFilter = 'All';
         let isEditMode = false;
+        
+        // 定義 Collections 名稱對照
+        const COLLECTIONS = {
+            'todo': 'To Do',
+            'togo': 'To Go',
+            'toeat': 'To Eat',
+            'tobuy': 'To Buy',
+            'recurring': 'Recurring',
+            'completed': 'Completed'
+        };
 
-        // --- 初始化 ---
+        let itemsDataStore = {
+            'To Do': [],
+            'To Go': [],
+            'To Eat': [],
+            'To Buy': [],
+            'Recurring': [],
+            'Completed': []
+        };
+        
+        let db = null; // 先宣告 db
+
+        // --- 🔥 2. Firebase 設定 (請填入您的資料) 🔥 ---
+        // ⚠️ 請注意：若這裡的資料包含 "請填入" 字樣，網站將無法連線！
+        const firebaseConfig = {
+            apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
+            authDomain: "wiilc-family.firebaseapp.com",
+            projectId: "wiilc-family",
+            storageBucket: "wiilc-family.firebasestorage.app",
+            messagingSenderId: "855894103830",
+            appId: "1:855894103830:web:12245d01c942ed803ba237"
+        };
+
+        // --- 安全檢查與初始化 ---
+        function initApp() {
+            // 檢查是否為預設值
+            if (firebaseConfig.projectId.includes("請填入") || firebaseConfig.apiKey.includes("請填入")) {
+                console.warn("⚠️ Firebase 設定尚未填寫。應用程式將以離線模式顯示介面，但無法讀寫資料。");
+                // 顯示離線橫幅
+                const banner = document.getElementById('offline-banner');
+                if (banner) banner.style.display = 'block';
+                
+                // 不再拋出 Error，讓程式碼繼續執行變數初始化
+                return;
+            }
+
+            try {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                setupFirebaseListeners();
+            } catch (error) {
+                console.error("Firebase 初始化失敗，請檢查設定: ", error);
+                alert("Firebase 連線設定未填寫正確，請檢查程式碼中的 firebaseConfig 區塊。");
+            }
+        }
+
+        // --- DOMContentLoaded ---
         document.addEventListener('DOMContentLoaded', () => {
+            initApp(); // 嘗試初始化
+
             window.addEventListener('scroll', () => {
                 const navbar = document.getElementById('navbar');
                 if (window.scrollY > 20) {
@@ -487,6 +566,45 @@ https://gemini.google.com/share/6802d099bb3c
 
             switchTab('toeat');
         });
+            
+        // 🔥 3. 啟動 Firebase 實時監聽 (同時監聽 6 個 Collections) 🔥
+        function setupFirebaseListeners() {
+            if (!db) return; // 如果 db 沒初始化成功就不監聽
+
+            Object.values(COLLECTIONS).forEach(collectionName => {
+                db.collection(collectionName).onSnapshot((querySnapshot) => {
+                    const collectionItems = [];
+                    querySnapshot.forEach((doc) => {
+                        // 強制轉型 ID 為數字以便排序
+                        collectionItems.push({ 
+                            id: doc.id, 
+                            ...doc.data(),
+                            sourceCollection: collectionName 
+                        });
+                    });
+                    
+                    itemsDataStore[collectionName] = collectionItems;
+                    updateAllItemsAndRender();
+
+                }, (error) => {
+                    console.error(`Error getting documents from ${collectionName}: `, error);
+                });
+            });
+        }
+
+        function updateAllItemsAndRender() {
+            items = Object.values(itemsDataStore).flat();
+            renderList();
+            
+            const emptyState = document.getElementById('empty-state');
+            if (items.length === 0) {
+                emptyState.textContent = "Loading items...";
+                emptyState.classList.remove('hidden');
+            } else if (document.getElementById('list-container').children.length === 0) {
+                emptyState.textContent = "No items found.";
+                emptyState.classList.remove('hidden');
+            }
+        }
 
         // --- Find / Filter 功能 ---
         function toggleFindDropdown(btn) {
@@ -512,7 +630,7 @@ https://gemini.google.com/share/6802d099bb3c
             renderList();
         }
 
-        // --- 分頁與名稱映射 (Updated with Emojis) ---
+        // --- 分頁與名稱映射 ---
         function getTabDisplayName(tab) {
             const names = {
                 'todo': '🛠️ To Do',
@@ -523,6 +641,10 @@ https://gemini.google.com/share/6802d099bb3c
                 'completed': '🏁 Completed'
             };
             return names[tab] || 'Item';
+        }
+        
+        function getCollectionNameByTab(tab) {
+            return COLLECTIONS[tab];
         }
 
         function toggleMobileMenu() {
@@ -553,7 +675,6 @@ https://gemini.google.com/share/6802d099bb3c
                 activeBtnM.classList.add('bg-[#4169E1]', 'text-white', 'shadow-md');
             }
 
-            // Updated Titles with Emojis
             const desktopTitles = {
                 'todo': '🛠️ To Do List',
                 'togo': '🚀 Places To Go',
@@ -607,24 +728,25 @@ https://gemini.google.com/share/6802d099bb3c
             let filteredItems = items.filter(item => {
                 let isMatchTab = false;
                 if (currentTab === 'completed') {
-                    isMatchTab = (item.isCompleted === true);
+                    isMatchTab = (item.sourceCollection === 'Completed');
                 } else {
-                    isMatchTab = (item.tab === currentTab && !item.isCompleted);
+                    isMatchTab = (item.sourceCollection === COLLECTIONS[currentTab]);
                 }
 
                 let isMatchUser = true;
                 if (currentFilter !== 'All') {
-                    isMatchUser = item.forWho.includes(currentFilter) || item.forWho.includes('All');
+                    const itemWho = item.forWho || [];
+                    isMatchUser = itemWho.includes(currentFilter) || itemWho.includes('All');
                 }
 
                 return isMatchTab && isMatchUser;
             });
 
-            // 排序：由新到舊 (ID 大的在前)
-            filteredItems.sort((a, b) => b.id - a.id);
+            filteredItems.sort((a, b) => b.number - a.number);
 
             const emptyState = document.getElementById('empty-state');
             if (filteredItems.length === 0) {
+                emptyState.textContent = "No items found.";
                 emptyState.classList.remove('hidden');
             } else {
                 emptyState.classList.add('hidden');
@@ -633,14 +755,13 @@ https://gemini.google.com/share/6802d099bb3c
                     const tr = document.createElement('tr');
                     tr.className = 'transition-colors border-b border-gray-100';
                     tr.onclick = (e) => {
-                        // 如果點擊的是 Link 按鈕，不觸發 Edit
                         if (!e.target.closest('.btn-link')) {
-                            openEditModal(item.id);
+                            openEditModal(item.id, item.sourceCollection);
                         }
                     };
 
-                    // 1. # 和 For Who Tags
-                    const tagsHtml = item.forWho.map(p => `<span class="display-chip">${p}</span>`).join(' ');
+                    const itemWho = item.forWho || [];
+                    const tagsHtml = itemWho.map(p => `<span class="display-chip">${p}</span>`).join(' ');
                     const topRow = `
                         <div class="flex items-center gap-3 mb-1">
                             <span class="font-mono text-gray-500 font-bold text-xl">#${item.number}</span>
@@ -648,23 +769,19 @@ https://gemini.google.com/share/6802d099bb3c
                         </div>
                     `;
 
-                    // 2. Title
                     const titleRow = `
                         <div class="font-bold text-[#4169E1] mb-2 text-xl break-words">${item.title}</div>
                     `;
 
-                    // 3. Details (Deadline, Where, Restaurant, Frequency, URL)
                     let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
                     if (item.deadline) detailsHtml += `<span><i class="far fa-calendar-alt mr-1"></i> ${formatDate(item.deadline)}</span>`;
                     
-                    // Location / Where / Restaurant
                     if (item.where) detailsHtml += `<span><i class="fas fa-map-marker-alt mr-1"></i> ${item.where}</span>`;
                     if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
-                    if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`; // To Eat 的 Location
+                    if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`;
                     
                     if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
                     
-                    // URL Button
                     if (item.url) {
                         detailsHtml += `<a href="${item.url}" target="_blank" class="btn-link"><i class="fas fa-link"></i> Link</a>`;
                     }
@@ -684,6 +801,7 @@ https://gemini.google.com/share/6802d099bb3c
 
         // --- 模態框操作 ---
         function openModal() {
+            // 如果沒有 DB，允許打開 UI 讓用戶查看表單，但儲存時提示
             isEditMode = false;
             resetForm();
             setupFormFields(currentTab);
@@ -700,9 +818,9 @@ https://gemini.google.com/share/6802d099bb3c
             document.getElementById('item-modal').classList.remove('hidden');
         }
 
-        function openEditModal(id) {
+        function openEditModal(id, sourceCollection) {
             isEditMode = true;
-            const item = items.find(i => i.id === id);
+            const item = items.find(i => i.id === id && i.sourceCollection === sourceCollection);
             if (!item) return;
 
             resetForm();
@@ -711,14 +829,18 @@ https://gemini.google.com/share/6802d099bb3c
             const tabName = getTabDisplayName(item.tab);
             document.getElementById('label-title').textContent = `${tabName} Title`;
 
-            document.getElementById('item-id').value = item.id;
+            const idInput = document.getElementById('item-id');
+            idInput.value = item.id;
+            idInput.dataset.collection = sourceCollection; 
+
             document.getElementById('input-title').value = item.title;
             document.getElementById('input-url').value = item.url || '';
             document.getElementById('input-content').value = item.content || '';
             document.getElementById('input-remark').value = item.remark || '';
 
+            const itemWho = item.forWho || [];
             document.querySelectorAll('.select-chip').forEach(chip => {
-                if (item.forWho.includes(chip.dataset.value)) {
+                if (itemWho.includes(chip.dataset.value)) {
                     chip.classList.add('selected');
                 }
             });
@@ -735,7 +857,6 @@ https://gemini.google.com/share/6802d099bb3c
 
             const toggleBtn = document.getElementById('btn-toggle-complete');
             if (item.isCompleted) {
-                // Return Back 按鈕：綠色，形狀同 Delete
                 toggleBtn.textContent = 'Return Back';
                 toggleBtn.className = 'btn-success w-full shadow-md'; 
             } else {
@@ -756,12 +877,10 @@ https://gemini.google.com/share/6802d099bb3c
             }
         });
 
-        // --- 表單邏輯 ---
         function setupFormFields(tab) {
             const fields = ['deadline', 'frequency', 'where', 'restaurant', 'location'];
             fields.forEach(f => document.getElementById(`field-${f}`).classList.add('hidden'));
 
-            // 預設標籤
             document.getElementById('label-where').textContent = 'Location';
             document.getElementById('label-url').textContent = 'URL';
 
@@ -770,14 +889,12 @@ https://gemini.google.com/share/6802d099bb3c
             } else if (tab === 'togo') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-where').classList.remove('hidden');
-                // To Go 特定標籤
                 document.getElementById('label-where').textContent = 'Location';
                 document.getElementById('label-url').textContent = 'URL (Paste Google Maps Link)';
             } else if (tab === 'toeat') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-restaurant').classList.remove('hidden');
                 document.getElementById('field-location').classList.remove('hidden');
-                // To Eat 特定標籤
                 document.getElementById('label-url').textContent = 'URL (Paste Google Maps Link)';
             } else if (tab === 'recurring') {
                 document.getElementById('field-frequency').classList.remove('hidden');
@@ -807,7 +924,6 @@ https://gemini.google.com/share/6802d099bb3c
             document.getElementById('input-restaurant').value = '';
             document.getElementById('input-location').value = '';
             document.getElementById('input-frequency').value = '';
-            
             document.querySelectorAll('.select-chip').forEach(el => el.classList.remove('selected'));
         }
 
@@ -816,17 +932,23 @@ https://gemini.google.com/share/6802d099bb3c
             return max + 1;
         }
 
-        // --- 資料操作 ---
+        // --- 🔥 4. 資料操作：指定 Document ID 與 Collection 🔥 ---
         function saveNewItem() {
+            if (!db) { 
+                alert("⚠️ 請注意：尚未連線至 Firebase 資料庫，本次新增將無法儲存。請修改程式碼填入 API Key。"); 
+                return; 
+            }
             const title = document.getElementById('input-title').value.trim();
             if (!title) {
                 alert('Please enter a Title!');
                 return;
             }
 
-            const newItem = {
-                id: Date.now().toString(),
-                number: generateUniqueNumber(),
+            const newNumber = generateUniqueNumber();
+            const collectionName = getCollectionNameByTab(currentTab);
+
+            db.collection(collectionName).doc(String(newNumber)).set({
+                number: newNumber,
                 tab: currentTab,
                 isCompleted: false,
                 title: title,
@@ -838,89 +960,107 @@ https://gemini.google.com/share/6802d099bb3c
                 frequency: document.getElementById('input-frequency').value,
                 where: document.getElementById('input-where').value,
                 restaurant: document.getElementById('input-restaurant').value,
-                location: document.getElementById('input-location').value
-            };
-
-            items.push(newItem);
-            saveToLocalStorage();
-            closeModal();
-            renderList();
+                location: document.getElementById('input-location').value,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                closeModal();
+            })
+            .catch((error) => {
+                console.error("Error adding document: ", error);
+                alert("Error saving item: " + error.message);
+            });
         }
 
         function confirmEdit() {
-            const id = document.getElementById('item-id').value;
-            const itemIndex = items.findIndex(i => i.id === id);
-            
-            if (itemIndex > -1) {
-                items[itemIndex].title = document.getElementById('input-title').value;
-                items[itemIndex].forWho = getSelectedWho();
-                items[itemIndex].url = document.getElementById('input-url').value;
-                items[itemIndex].content = document.getElementById('input-content').value;
-                items[itemIndex].remark = document.getElementById('input-remark').value;
-                items[itemIndex].deadline = document.getElementById('input-deadline').value;
-                items[itemIndex].frequency = document.getElementById('input-frequency').value;
-                items[itemIndex].where = document.getElementById('input-where').value;
-                items[itemIndex].restaurant = document.getElementById('input-restaurant').value;
-                items[itemIndex].location = document.getElementById('input-location').value;
-
-                saveToLocalStorage();
-                closeModal();
-                renderList();
+            if (!db) {
+                alert("⚠️ 請注意：尚未連線至 Firebase 資料庫，本次修改將無法儲存。");
+                return;
             }
+            const id = document.getElementById('item-id').value;
+            const collectionName = document.getElementById('item-id').dataset.collection;
+            
+            db.collection(collectionName).doc(id).update({
+                title: document.getElementById('input-title').value,
+                forWho: getSelectedWho(),
+                url: document.getElementById('input-url').value,
+                content: document.getElementById('input-content').value,
+                remark: document.getElementById('input-remark').value,
+                deadline: document.getElementById('input-deadline').value,
+                frequency: document.getElementById('input-frequency').value,
+                where: document.getElementById('input-where').value,
+                restaurant: document.getElementById('input-restaurant').value,
+                location: document.getElementById('input-location').value
+            })
+            .then(() => {
+                closeModal();
+            })
+            .catch((error) => {
+                console.error("Error updating document: ", error);
+            });
         }
 
         function deleteItem() {
+            if (!db) {
+                alert("⚠️ 請注意：尚未連線至 Firebase 資料庫，無法刪除資料。");
+                return;
+            }
             if (confirm('Are you sure delete this item?')) {
                 const id = document.getElementById('item-id').value;
-                items = items.filter(i => i.id !== id);
-                saveToLocalStorage();
-                closeModal();
-                renderList();
+                const collectionName = document.getElementById('item-id').dataset.collection;
+                
+                db.collection(collectionName).doc(id).delete().then(() => {
+                    closeModal();
+                }).catch((error) => {
+                    console.error("Error removing document: ", error);
+                });
             }
         }
 
+        // --- 🔥 5. 移動資料邏輯：使用 Batch 交易確保安全 🔥 ---
         function toggleCompletion() {
-            const id = document.getElementById('item-id').value;
-            const itemIndex = items.findIndex(i => i.id === id);
-            
-            if (itemIndex > -1) {
-                items[itemIndex].isCompleted = !items[itemIndex].isCompleted;
-                saveToLocalStorage();
-                closeModal();
-                renderList();
+            if (!db) {
+                alert("⚠️ 請注意：尚未連線至 Firebase 資料庫，無法變更狀態。");
+                return;
             }
-        }
+            const id = document.getElementById('item-id').value;
+            const currentCollection = document.getElementById('item-id').dataset.collection;
+            const item = items.find(i => i.id === id && i.sourceCollection === currentCollection);
+            
+            if (item) {
+                const batch = db.batch();
+                
+                const oldRef = db.collection(currentCollection).doc(id);
+                let newCollectionName = '';
+                let newIsCompleted = false;
 
-        function saveToLocalStorage() {
-            localStorage.setItem('willcFamilyItems', JSON.stringify(items));
+                if (item.isCompleted) {
+                    newCollectionName = COLLECTIONS[item.tab]; 
+                    newIsCompleted = false;
+                } else {
+                    newCollectionName = 'Completed';
+                    newIsCompleted = true;
+                }
+
+                const newRef = db.collection(newCollectionName).doc(id);
+
+                const dataToMove = { ...item };
+                delete dataToMove.id; 
+                delete dataToMove.sourceCollection; 
+                dataToMove.isCompleted = newIsCompleted;
+
+                batch.set(newRef, dataToMove);
+                batch.delete(oldRef);
+
+                batch.commit().then(() => {
+                    closeModal();
+                }).catch((error) => {
+                    console.error("Error moving document: ", error);
+                    alert("Move failed: " + error.message);
+                });
+            }
         }
 
     </script>
-
-    <!-- 1. Firebase 核心 (必須先放這個) -->
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
-
-<!-- 2. Firestore 資料庫 (再放這個) -->
-<script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js"></script>
-
-<script>
-  // 3. 貼上您的 firebaseConfig 設定 (從後台複製來的 apiKey 那一段)
-  const firebaseConfig = {
-    apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
-    authDomain: "wiilc-family.firebaseapp.com",
-    projectId: "wiilc-family",
-    storageBucket: "wiilc-family.firebasestorage.app",
-    messagingSenderId: "855894103830",
-    appId: "1:855894103830:web:12245d01c942ed803ba237"
-  };
-
-  // 4. 初始化 Firebase
-  firebase.initializeApp(firebaseConfig);
-
-  // 5. 建立資料庫連線變數 (之後新增/讀取都用這個 db)
-  const db = firebase.firestore();
-</script>
-    
 </body>
 </html>
-
