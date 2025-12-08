@@ -117,10 +117,10 @@
             -webkit-appearance: none; /* 移除 iOS 預設樣式 */
             appearance: none;
         }
-        /* 針對 Date input 特別加強 */
+        /* 針對 Date input 特別加強，移除 min-height 以修正 Chrome 顯示過長問題 */
         input[type="date"] {
             background-color: #ffffff !important;
-            min-height: 50px; /* 確保高度足夠 */
+            /* min-height: 50px;  <-- 移除此行，讓 p-3 自然撐開 */
         }
 
         .select-chip {
@@ -191,17 +191,16 @@
         }
 
         /* -------------------------------------------
-           🔥 V1.11 Mobile Modal Fix (強力修復) 🔥
+           🔥 V1.12 Mobile Modal Fix (調整間距) 🔥
            ------------------------------------------- */
         #item-modal {
-            align-items: flex-start !important; /* 強制靠上，不置中，避免被鍵盤或網址列頂上去 */
-            padding-top: 120px !important;      /* 預留超大頂部空間，避開 Chrome 網址列 */
-            padding-bottom: 80px;               /* 預留底部導航空間 */
+            align-items: flex-start !important; /* 強制靠上，不置中 */
+            padding-top: 96px !important;       /* 縮減頂部間距 (約 6rem)，比之前的 120px 短 */
+            padding-bottom: 80px;               /* 預留底部空間 */
             overflow-y: auto;                   /* 允許外層容器滾動 */
-            -webkit-overflow-scrolling: touch;  /* iOS 滾動優化 */
+            -webkit-overflow-scrolling: touch;  
         }
         
-        /* 針對電腦版的樣式覆蓋 */
         @media (min-width: 640px) {
             #item-modal {
                 align-items: center !important; /* 電腦版維持垂直置中 */
@@ -319,7 +318,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.11
+            V1.12
         </div>
     </main>
 
@@ -448,12 +447,12 @@
         // 🔥 請填入您的 Firebase 設定 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
-    authDomain: "wiilc-family.firebaseapp.com",
-    projectId: "wiilc-family",
-    storageBucket: "wiilc-family.firebasestorage.app",
-    messagingSenderId: "855894103830",
-    appId: "1:855894103830:web:12245d01c942ed803ba237"
-  };
+            authDomain: "wiilc-family.firebaseapp.com",
+            projectId: "wiilc-family",
+            storageBucket: "wiilc-family.firebasestorage.app",
+            messagingSenderId: "855894103830",
+            appId: "1:855894103830:web:12245d01c942ed803ba237"
+        };
 
         function initApp() {
             if (firebaseConfig.projectId.includes("請填入") || firebaseConfig.apiKey.includes("請填入")) {
@@ -563,7 +562,6 @@
 
             const formattedTotal = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(monthlyTotal);
             
-            // Explicitly add NZ$ prefix
             document.getElementById('recurring-total-display').textContent = `Average Payment NZ$${formattedTotal} / mo`;
             document.getElementById('recurring-summary').classList.remove('hidden');
         }
@@ -801,7 +799,8 @@
                     
                     if (item.tab === 'recurring') {
                         if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
-                        if (item.payment) detailsHtml += `<span class="text-green-600 font-bold"><i class="fas fa-dollar-sign mr-1"></i>NZ$${item.payment}</span>`;
+                        // 🔥 V1.12 Update: Removed dollar icon, only display NZ$
+                        if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
                     } else {
                         if (item.deadline) {
                             let weatherHtml = '';
