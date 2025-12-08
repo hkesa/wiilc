@@ -190,16 +190,22 @@
             pointer-events: none; z-index: 9999;
         }
 
-        /* 解決 Modal 頂部遮擋問題 - 手機版增加更多頂部間距 */
+        /* -------------------------------------------
+           🔥 V1.11 Mobile Modal Fix (強力修復) 🔥
+           ------------------------------------------- */
         #item-modal {
-            align-items: flex-start; /* 改為靠上對齊 */
-            padding-top: 6rem; /* 增加頂部 padding (約 96px)，避開手機網址列 */
-            padding-bottom: 2rem;
+            align-items: flex-start !important; /* 強制靠上，不置中，避免被鍵盤或網址列頂上去 */
+            padding-top: 120px !important;      /* 預留超大頂部空間，避開 Chrome 網址列 */
+            padding-bottom: 80px;               /* 預留底部導航空間 */
+            overflow-y: auto;                   /* 允許外層容器滾動 */
+            -webkit-overflow-scrolling: touch;  /* iOS 滾動優化 */
         }
+        
+        /* 針對電腦版的樣式覆蓋 */
         @media (min-width: 640px) {
             #item-modal {
-                align-items: center; /* 電腦版維持置中 */
-                padding-top: 2rem;
+                align-items: center !important; /* 電腦版維持垂直置中 */
+                padding-top: 2rem !important;
                 padding-bottom: 2rem;
             }
         }
@@ -313,12 +319,12 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.10
+            V1.11
         </div>
     </main>
 
     <!-- 模態框 -->
-    <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] flex justify-center overflow-y-auto">
+    <div id="item-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] flex justify-center">
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative my-4 mx-4">
             <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-blue-50 rounded-t-2xl">
                 <h2 id="modal-title" class="font-bold text-[#4169E1]">Add Item</h2>
@@ -327,7 +333,7 @@
                 </button>
             </div>
 
-            <!-- Scrollable Content (Inputs + Buttons now) -->
+            <!-- Scrollable Content -->
             <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                 <input type="hidden" id="item-id">
                 
@@ -360,7 +366,7 @@
                     </select>
                 </div>
                 <div id="field-payment" class="hidden">
-                    <label class="block text-gray-600 mb-1 font-bold">Payment ($)</label>
+                    <label class="block text-gray-600 mb-1 font-bold">Payment (NZ$)</label>
                     <input type="number" id="input-payment" class="w-full border border-gray-300 rounded-lg p-3 bg-white" placeholder="0">
                 </div>
 
@@ -400,7 +406,7 @@
                     <input type="text" id="input-remark" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Notes...">
                 </div>
 
-                <!-- Buttons Area (Now inside scrollable content) -->
+                <!-- Buttons Area -->
                 <div class="pt-4 flex flex-col gap-3">
                     <button id="btn-save-new" onclick="saveNewItem()" class="btn-add-item w-full shadow-md">Add Item</button>
                     <div id="edit-buttons" class="hidden flex flex-col gap-3 w-full">
@@ -410,8 +416,6 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Removed Fixed Footer -->
         </div>
     </div>
 
@@ -444,12 +448,12 @@
         // 🔥 請填入您的 Firebase 設定 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
-            authDomain: "wiilc-family.firebaseapp.com",
-            projectId: "wiilc-family",
-            storageBucket: "wiilc-family.firebasestorage.app",
-            messagingSenderId: "855894103830",
-            appId: "1:855894103830:web:12245d01c942ed803ba237"
-        };
+    authDomain: "wiilc-family.firebaseapp.com",
+    projectId: "wiilc-family",
+    storageBucket: "wiilc-family.firebasestorage.app",
+    messagingSenderId: "855894103830",
+    appId: "1:855894103830:web:12245d01c942ed803ba237"
+  };
 
         function initApp() {
             if (firebaseConfig.projectId.includes("請填入") || firebaseConfig.apiKey.includes("請填入")) {
@@ -549,7 +553,7 @@
                     const amount = parseFloat(item.payment);
                     switch(item.frequency) {
                         case 'Daily': monthlyTotal += amount * 30; break;
-                        case 'Weekly': monthlyTotal += amount * 4; break; // Modified to 4 per user request
+                        case 'Weekly': monthlyTotal += amount * 4; break;
                         case 'Monthly': monthlyTotal += amount; break;
                         case 'Quarterly': monthlyTotal += amount / 3; break;
                         case 'Yearly': monthlyTotal += amount / 12; break;
@@ -559,6 +563,7 @@
 
             const formattedTotal = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(monthlyTotal);
             
+            // Explicitly add NZ$ prefix
             document.getElementById('recurring-total-display').textContent = `Average Payment NZ$${formattedTotal} / mo`;
             document.getElementById('recurring-summary').classList.remove('hidden');
         }
@@ -795,11 +800,9 @@
                     let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
                     
                     if (item.tab === 'recurring') {
-                        // Priority: Frequency first, then Payment
                         if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
-                        if (item.payment) detailsHtml += `<span class="text-green-600 font-bold"><i class="fas fa-dollar-sign mr-1"></i>${item.payment}</span>`;
+                        if (item.payment) detailsHtml += `<span class="text-green-600 font-bold"><i class="fas fa-dollar-sign mr-1"></i>NZ$${item.payment}</span>`;
                     } else {
-                        // Other tabs logic
                         if (item.deadline) {
                             let weatherHtml = '';
                             if (item.tab === 'togo') {
@@ -822,7 +825,6 @@
                         if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
                         if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`;
                         
-                        // For non-recurring tabs (though frequency field is mostly for recurring)
                         if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
                     }
                     
