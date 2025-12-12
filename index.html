@@ -253,7 +253,8 @@
             font-size: 12px !important;
             line-height: 1.2 !important;
             margin-top: 2px;
-            word-break: break-word; /* Ensure text wraps */
+            word-wrap: break-word; /* Allow long words to wrap */
+            word-break: normal;    /* V1.17 Fix: Prevent breaking in middle of words */
         }
         .text-red-holiday {
             color: #ef4444; /* Tailwind red-500 */
@@ -406,7 +407,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.16
+            V1.17
         </div>
     </main>
 
@@ -527,9 +528,10 @@
         let currentCalendarDate = new Date();
         let currentCalendarRegion = 'HK'; 
 
-        // Public Holidays Data (2025-2026)
+        // Public Holidays Data (2025-2026) - 🔥 V1.17 Data Update
         const PUBLIC_HOLIDAYS = {
             'HK': {
+                // 2025
                 '2025-01-01': '元旦',
                 '2025-01-29': '農曆年初一',
                 '2025-01-30': '農曆年初二',
@@ -541,21 +543,20 @@
                 '2025-05-01': '勞動節',
                 '2025-05-05': '佛誕',
                 '2025-05-31': '端午節',
-                '2025-07-01': '特區成立紀念日',
+                '2025-07-01': '香港特別行政區成立紀念日',
                 '2025-10-01': '國慶日',
                 '2025-10-07': '中秋節翌日', 
                 '2025-10-29': '重陽節',
                 '2025-12-25': '聖誕節',
-                '2025-12-26': '聖誕節後第一個周日',
-                // 2026 Updated by User Request
-                '2026-01-01': '一月一日',
+                '2025-12-26': '聖誕節後第一個週日', // Corrected per user request
+                // 2026 Prediction
+                '2026-01-01': '元旦', // Corrected
                 '2026-02-17': '農曆年初一',
                 '2026-02-18': '農曆年初二',
                 '2026-02-19': '農曆年初三',
                 '2026-04-03': '耶穌受難節',
                 '2026-04-04': '耶穌受難節翌日',
-                '2026-04-06': '清明節翌日',
-                '2026-04-07': '復活節星期一翌日',
+                '2026-04-06': '復活節星期一',
                 '2026-05-01': '勞動節',
                 '2026-05-25': '佛誕翌日',
                 '2026-06-19': '端午節',
@@ -564,9 +565,10 @@
                 '2026-10-01': '國慶日',
                 '2026-10-19': '重陽節翌日',
                 '2026-12-25': '聖誕節',
-                '2026-12-26': '聖誕節後第一個周日'
+                '2026-12-26': '聖誕節後第一個週日' // Corrected
             },
             'NZ': {
+                // 2025
                 '2025-01-01': "New Year's Day",
                 '2025-01-02': "Day after New Year's Day",
                 '2025-02-06': "Waitangi Day",
@@ -578,7 +580,7 @@
                 '2025-10-27': "Labour Day",
                 '2025-12-25': "Christmas Day",
                 '2025-12-26': "Boxing Day",
-                // 2026 Prediction
+                // 2026
                 '2026-01-01': "New Year's Day",
                 '2026-01-02': "Day after New Year's Day",
                 '2026-02-06': "Waitangi Day",
@@ -911,6 +913,7 @@
             const calendarView = document.getElementById('calendar-view');
             const listView = document.getElementById('list-container');
             const versionFooter = document.getElementById('version-footer');
+            const emptyState = document.getElementById('empty-state');
 
             if (tabName === 'calendar') {
                 // Calendar Mode
@@ -924,6 +927,8 @@
                 calendarView.classList.remove('hidden');
                 listView.classList.add('hidden');
                 versionFooter.classList.add('hidden');
+                // 🔥 V1.17 Fix: Ensure empty-state is hidden in calendar mode
+                emptyState.classList.add('hidden');
                 
                 renderCalendar();
             } else {
@@ -1102,13 +1107,13 @@
             document.getElementById('weather-display').classList.add('hidden');
             document.getElementById('weather-display-eat').classList.add('hidden');
             
-            document.getElementById('item-modal').classList.remove('hidden');
-            
-            // Robust scroll to top logic
+            // Scroll to top
             setTimeout(() => {
                 const scrollContainer = document.getElementById('modal-content-scroll');
                 if(scrollContainer) scrollContainer.scrollTop = 0;
             }, 10);
+            
+            document.getElementById('item-modal').classList.remove('hidden');
         }
 
         function openEditModal(id, sourceCollection) {
@@ -1152,13 +1157,13 @@
                 toggleBtn.className = 'btn-success w-full shadow-md';
             }
             
-            document.getElementById('item-modal').classList.remove('hidden');
-            
-            // Robust scroll to top logic
+            // Scroll to top
             setTimeout(() => {
                 const scrollContainer = document.getElementById('modal-content-scroll');
                 if(scrollContainer) scrollContainer.scrollTop = 0;
             }, 10);
+
+            document.getElementById('item-modal').classList.remove('hidden');
         }
 
         function closeModal() { document.getElementById('item-modal').classList.add('hidden'); }
