@@ -19,7 +19,6 @@
         /* 全局字體設定 */
         body {
             font-family: 'Quicksand', sans-serif;
-            /* Royal Blue 漸層背景 */
             background: linear-gradient(135deg, #4169E1 0%, #6495ED 100%);
             min-height: 100vh;
             color: #333;
@@ -84,37 +83,41 @@
         }
         .btn-find:hover { background: #f0f4ff; }
 
+        /* Calendar Region Buttons */
+        .btn-region {
+            background: white;
+            color: #4169E1 !important;
+            border: 1px solid #4169E1;
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        /* V1.15 Update: Active state uses Pink (#FF007F) */
+        .btn-region.active {
+            background: #FF007F;
+            border-color: #FF007F;
+            color: white !important;
+        }
+
         .btn-danger { background: #ff6b6b; color: white !important; border-radius: 12px; padding: 10px 20px; }
         .btn-success { background: #20bf6b; color: white !important; border-radius: 12px; padding: 10px 20px; }
         
-        .btn-link {
+        .btn-link, .btn-map-link {
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            color: #4169E1;
             font-weight: bold;
             text-decoration: none;
-            background: #edf2ff;
             padding: 2px 10px;
             border-radius: 8px;
-            border: 1px solid #bfdbfe;
             transition: background 0.2s;
         }
+        .btn-link { color: #4169E1; background: #edf2ff; border: 1px solid #bfdbfe; }
         .btn-link:hover { background: #dbeafe; }
-
-        .btn-map-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            color: #d946ef; /* Fuchsia for map pin */
-            font-weight: bold;
-            text-decoration: none;
-            background: #fae8ff;
-            padding: 2px 10px;
-            border-radius: 8px;
-            border: 1px solid #f0abfc;
-            transition: background 0.2s;
-        }
+        .btn-map-link { color: #d946ef; background: #fae8ff; border: 1px solid #f0abfc; }
         .btn-map-link:hover { background: #f5d0fe; }
 
         /* 卡片玻璃擬態 */
@@ -126,32 +129,24 @@
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
 
-        /* 列表項目卡片 (V1.13) */
         .item-card {
             background: white;
             border-radius: 12px;
             padding: 15px;
-            margin-bottom: 7px; /* 7px 距離 */
+            margin-bottom: 7px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             border: 1px solid rgba(0,0,0,0.05);
             transition: transform 0.1s, box-shadow 0.1s;
             cursor: pointer;
         }
-        .item-card:active {
-            transform: scale(0.99);
-            background-color: #f9fafb;
-        }
+        .item-card:active { transform: scale(0.99); background-color: #f9fafb; }
 
-        /* 輸入框強制白色背景 (解決 iOS 日期灰底問題) */
         input, select, textarea {
             background-color: #ffffff !important;
             -webkit-appearance: none;
             appearance: none;
         }
-        /* 針對 Date input 特別加強 */
-        input[type="date"] {
-            background-color: #ffffff !important;
-        }
+        input[type="date"] { background-color: #ffffff !important; }
 
         .select-chip {
             border: 2px solid #ddd;
@@ -164,12 +159,7 @@
             margin: 3px;
             user-select: none;
         }
-        .select-chip.selected {
-            border-color: #4169E1;
-            background: #edf2ff;
-            color: #4169E1;
-            font-weight: bold;
-        }
+        .select-chip.selected { border-color: #4169E1; background: #edf2ff; color: #4169E1; font-weight: bold; }
 
         .display-chip {
             font-size: 14px !important;
@@ -212,7 +202,7 @@
             pointer-events: none; z-index: 9999;
         }
 
-        /* V1.12 Mobile Modal Fix */
+        /* Modal Fixes */
         #item-modal {
             align-items: flex-start !important;
             padding-top: 96px !important;
@@ -220,7 +210,6 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;  
         }
-        
         @media (min-width: 640px) {
             #item-modal {
                 align-items: center !important;
@@ -228,13 +217,49 @@
                 padding-bottom: 2rem;
             }
         }
-
-        /* V1.13 Add Item Modal Title Style */
         #modal-title {
             text-align: center;
-            font-size: 21px !important; /* 18px + 3px */
+            font-size: 21px !important;
             font-weight: bold;
             width: 100%;
+        }
+
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .calendar-header {
+            text-align: center;
+            font-weight: bold;
+            color: #4169E1;
+            padding: 5px;
+        }
+        .calendar-day {
+            background: white;
+            border-radius: 8px;
+            min-height: 60px;
+            padding: 5px;
+            font-size: 14px !important;
+            border: 1px solid #eee;
+            position: relative;
+        }
+        .day-number {
+            font-weight: bold;
+        }
+        .holiday-name {
+            font-size: 12px !important;
+            line-height: 1.2 !important;
+            margin-top: 2px;
+            word-break: break-word; /* Ensure text wraps */
+        }
+        .text-red-holiday {
+            color: #ef4444; /* Tailwind red-500 */
+        }
+        .text-black-day {
+            color: #333;
         }
     </style>
 </head>
@@ -247,11 +272,12 @@
         <div class="max-w-6xl mx-auto relative">
             <div class="flex items-center justify-between">
                 <div class="font-bold text-[#4169E1] text-xl flex-shrink-0 z-10">WiilC Family</div>
-                <div class="md:hidden font-bold text-gray-600 truncate px-2 absolute left-1/2 transform -translate-x-1/2" id="mobile-page-title">🍟 To Eat</div>
+                <div class="md:hidden font-bold text-gray-600 truncate px-2 absolute left-1/2 transform -translate-x-1/2" id="mobile-page-title">🗓️ HK／NZ Holiday</div>
                 <button class="md:hidden text-[#4169E1] p-2 focus:outline-none z-10" onclick="toggleMobileMenu()">
                     <i class="fas fa-bars text-2xl"></i>
                 </button>
                 <div class="hidden md:flex space-x-2">
+                    <button onclick="switchTab('calendar')" class="nav-btn px-4 py-2 rounded-full transition-colors duration-200" id="nav-calendar-d">🗓️ HK／NZ Holiday</button>
                     <button onclick="switchTab('todo')" class="nav-btn px-4 py-2 rounded-full transition-colors duration-200" id="nav-todo-d">🛠️ To Do</button>
                     <button onclick="switchTab('togo')" class="nav-btn px-4 py-2 rounded-full transition-colors duration-200" id="nav-togo-d">🚀 To Go</button>
                     <button onclick="switchTab('toeat')" class="nav-btn px-4 py-2 rounded-full transition-colors duration-200" id="nav-toeat-d">🍟 To Eat</button>
@@ -261,6 +287,7 @@
                 </div>
             </div>
             <div id="mobile-menu" class="md:hidden mt-2 flex flex-col space-y-2 pb-2">
+                <button onclick="switchTab('calendar')" class="nav-btn mobile-nav-item p-3 rounded-lg text-left" id="nav-calendar-m">🗓️ HK／NZ Holiday</button>
                 <button onclick="switchTab('todo')" class="nav-btn mobile-nav-item p-3 rounded-lg text-left" id="nav-todo-m">🛠️ To Do</button>
                 <button onclick="switchTab('togo')" class="nav-btn mobile-nav-item p-3 rounded-lg text-left" id="nav-togo-m">🚀 To Go</button>
                 <button onclick="switchTab('toeat')" class="nav-btn mobile-nav-item p-3 rounded-lg text-left" id="nav-toeat-m">🍟 To Eat</button>
@@ -281,21 +308,30 @@
         
         <!-- Header 區塊 -->
         <div class="hidden md:grid grid-cols-3 items-center mb-6 glass-card p-4 relative z-20">
+            <!-- Left Controls -->
             <div class="relative">
-                <button onclick="toggleFindDropdown(this)" id="btn-find-desktop" class="btn-find">
-                    <i class="fas fa-filter"></i> <span id="find-label-d">Find: All</span>
-                </button>
-                <div id="find-dropdown-d" class="find-dropdown-menu hidden absolute top-12 left-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-50">
-                    <div class="find-option active" onclick="setFilter('All')">All</div>
-                    <div class="find-option" onclick="setFilter('Sabrina')">Sabrina</div>
-                    <div class="find-option" onclick="setFilter('Agatha')">Agatha</div>
-                    <div class="find-option" onclick="setFilter('Derek')">Derek</div>
-                    <div class="find-option" onclick="setFilter('Justin')">Justin</div>
-                    <div class="find-option" onclick="setFilter('Val')">Val</div>
+                <!-- Find Button (Hidden on Calendar) -->
+                <div id="desktop-find-container">
+                    <button onclick="toggleFindDropdown(this)" id="btn-find-desktop" class="btn-find">
+                        <i class="fas fa-filter"></i> <span id="find-label-d">Find: All</span>
+                    </button>
+                    <div id="find-dropdown-d" class="find-dropdown-menu hidden absolute top-12 left-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-50">
+                        <div class="find-option active" onclick="setFilter('All')">All</div>
+                        <div class="find-option" onclick="setFilter('Sabrina')">Sabrina</div>
+                        <div class="find-option" onclick="setFilter('Agatha')">Agatha</div>
+                        <div class="find-option" onclick="setFilter('Derek')">Derek</div>
+                        <div class="find-option" onclick="setFilter('Justin')">Justin</div>
+                        <div class="find-option" onclick="setFilter('Val')">Val</div>
+                    </div>
+                </div>
+                <!-- Calendar Region Buttons (Only on Calendar) -->
+                <div id="desktop-calendar-controls" class="hidden flex gap-2">
+                    <button onclick="setCalendarRegion('HK')" class="btn-region active" id="btn-hk-d">HK</button>
+                    <button onclick="setCalendarRegion('NZ')" class="btn-region" id="btn-nz-d">NZ</button>
                 </div>
             </div>
             
-            <h1 id="desktop-page-title" class="font-bold text-[#4169E1] text-center">🛠️ To Do List</h1>
+            <h1 id="desktop-page-title" class="font-bold text-[#4169E1] text-center">🗓️ HK／NZ Holiday</h1>
             
             <div id="desktop-add-container" class="flex justify-end">
                 <button onclick="openModal()" class="btn-add-item shadow-lg flex items-center gap-2">
@@ -306,7 +342,7 @@
 
         <!-- Mobile Controls -->
         <div class="md:hidden mb-4 flex gap-2">
-            <div class="relative flex-1">
+            <div class="relative flex-1" id="mobile-find-container">
                 <button onclick="toggleFindDropdown(this)" id="btn-find-mobile" class="btn-find w-full justify-center">
                     <i class="fas fa-filter"></i> <span id="find-label-m">Find: All</span>
                 </button>
@@ -319,7 +355,13 @@
                     <div class="find-option" onclick="setFilter('Val')">Val</div>
                 </div>
             </div>
-            <div class="flex-1">
+            <!-- Calendar Region Buttons Mobile -->
+            <div id="mobile-calendar-controls" class="hidden flex flex-1 gap-2">
+                <button onclick="setCalendarRegion('HK')" class="btn-region active" id="btn-hk-m">HK</button>
+                <button onclick="setCalendarRegion('NZ')" class="btn-region" id="btn-nz-m">NZ</button>
+            </div>
+
+            <div class="flex-1" id="mobile-add-container">
                 <button id="mobile-add-btn" onclick="openModal()" class="btn-add-item shadow-lg flex items-center gap-2 w-full justify-center">
                     <i class="fas fa-plus"></i> Add Item
                 </button>
@@ -333,6 +375,27 @@
             </div>
         </div>
 
+        <!-- Calendar View Container -->
+        <div id="calendar-view" class="hidden glass-card p-4 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <button onclick="changeMonth(-1)" class="text-[#4169E1]"><i class="fas fa-chevron-left"></i></button>
+                <h2 id="calendar-month-year" class="text-xl font-bold text-[#4169E1]">Month Year</h2>
+                <button onclick="changeMonth(1)" class="text-[#4169E1]"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="calendar-grid">
+                <div class="calendar-header text-red-holiday">Sun</div>
+                <div class="calendar-header">Mon</div>
+                <div class="calendar-header">Tue</div>
+                <div class="calendar-header">Wed</div>
+                <div class="calendar-header">Thu</div>
+                <div class="calendar-header">Fri</div>
+                <div class="calendar-header">Sat</div>
+            </div>
+            <div id="calendar-days" class="calendar-grid">
+                <!-- Days injected by JS -->
+            </div>
+        </div>
+
         <!-- 列表顯示區 (Div-based List) -->
         <div id="list-container" class="mb-6">
             <!-- JS 動態插入 .item-card -->
@@ -343,7 +406,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.13
+            V1.15
         </div>
     </main>
 
@@ -358,7 +421,7 @@
             </div>
 
             <!-- Scrollable Content -->
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <div id="modal-content-scroll" class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
                 <input type="hidden" id="item-id">
                 
                 <div>
@@ -368,7 +431,6 @@
 
                 <div>
                     <label class="block text-gray-600 mb-1 font-bold">For Who</label>
-                    <!-- Added border similar to input fields -->
                     <div id="who-container" class="flex flex-wrap gap-1 border border-gray-300 rounded-lg p-3">
                         <span class="select-chip" onclick="toggleWho(this)" data-value="All">All</span>
                         <span class="select-chip" onclick="toggleWho(this)" data-value="Sabrina">Sabrina</span>
@@ -394,13 +456,17 @@
                     <label class="block text-gray-600 mb-1 font-bold">Payment (NZ$)</label>
                     <input type="number" id="input-payment" class="w-full border border-gray-300 rounded-lg p-3 bg-white" placeholder="0">
                 </div>
+                <!-- New End Date for Recurring -->
+                <div id="field-enddate" class="hidden">
+                    <label class="block text-gray-600 mb-1 font-bold">End Date</label>
+                    <input type="date" id="input-enddate" class="w-full border border-gray-300 rounded-lg p-3 bg-white appearance-none">
+                </div>
 
                 <div id="field-deadline">
                     <label id="label-deadline" class="block text-gray-600 mb-1 font-bold">Deadline (if any)</label>
                     <input type="date" id="input-deadline" class="w-full border border-gray-300 rounded-lg p-3 bg-white appearance-none" onchange="updateWeatherDisplay()">
                 </div>
 
-                <!-- Where / Location fields consolidated to input-location mostly, but keeping logic compatible -->
                 <div id="field-where" class="hidden">
                     <label id="label-where" class="block text-gray-600 mb-1 font-bold">Location</label>
                     <input type="text" id="input-where" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Location name..." oninput="updateWeatherDisplay()">
@@ -412,14 +478,12 @@
                     <input type="text" id="input-restaurant" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Restaurant name...">
                 </div>
                 
-                <!-- General Location Field (For To Eat, To Do, To Buy, Recurring) -->
                 <div id="field-location" class="hidden">
                     <label class="block text-gray-600 mb-1 font-bold">Location</label>
                     <input type="text" id="input-location" class="w-full border border-gray-300 rounded-lg p-3" placeholder="e.g. Downtown" oninput="updateWeatherDisplay()">
                     <div id="weather-display-eat" class="mt-2 text-[#4169E1] font-bold hidden flex items-center gap-2"></div>
                 </div>
 
-                <!-- Google Maps Link Field -->
                 <div id="field-maps-link" class="hidden">
                     <label class="block text-gray-600 mb-1 font-bold">Google Maps Link</label>
                     <input type="url" id="input-maps-link" class="w-full border border-gray-300 rounded-lg p-3" placeholder="https://maps.google.com/...">
@@ -455,9 +519,78 @@
 
     <script>
         let items = [];
-        let currentTab = 'toeat'; 
+        let currentTab = 'toeat'; // Default tab set to 'toeat'
         let currentFilter = 'All';
         let isEditMode = false;
+        
+        // Calendar State
+        let currentCalendarDate = new Date();
+        let currentCalendarRegion = 'HK'; 
+
+        // Public Holidays Data (2025-2026)
+        const PUBLIC_HOLIDAYS = {
+            'HK': {
+                '2025-01-01': '元旦',
+                '2025-01-29': '農曆年初一',
+                '2025-01-30': '農曆年初二',
+                '2025-01-31': '農曆年初三',
+                '2025-04-04': '清明節',
+                '2025-04-18': '耶穌受難節',
+                '2025-04-19': '耶穌受難節翌日',
+                '2025-04-21': '復活節星期一',
+                '2025-05-01': '勞動節',
+                '2025-05-05': '佛誕',
+                '2025-05-31': '端午節',
+                '2025-07-01': '特區成立紀念日',
+                '2025-10-01': '國慶日',
+                '2025-10-07': '中秋節翌日', // Correction: 2025 Mid-Autumn is Oct 6, holiday Oct 7
+                '2025-10-29': '重陽節',
+                '2025-12-25': '聖誕節',
+                '2025-12-26': '聖誕節後第一個周日',
+                // 2026 Prediction
+                '2026-01-01': '元旦',
+                '2026-02-17': '農曆年初一',
+                '2026-02-18': '農曆年初二',
+                '2026-02-19': '農曆年初三',
+                '2026-04-03': '耶穌受難節',
+                '2026-04-04': '耶穌受難節翌日/清明節',
+                '2026-04-06': '復活節星期一',
+                '2026-05-01': '勞動節',
+                '2026-05-25': '佛誕',
+                '2026-06-19': '端午節',
+                '2026-07-01': '特區成立紀念日',
+                '2026-09-26': '中秋節翌日',
+                '2026-10-01': '國慶日',
+                '2026-10-19': '重陽節',
+                '2026-12-25': '聖誕節',
+                '2026-12-26': '聖誕節後第一個周日'
+            },
+            'NZ': {
+                '2025-01-01': "New Year's Day",
+                '2025-01-02': "Day after New Year's Day",
+                '2025-02-06': "Waitangi Day",
+                '2025-04-18': "Good Friday",
+                '2025-04-21': "Easter Monday",
+                '2025-04-25': "ANZAC Day",
+                '2025-06-02': "King's Birthday",
+                '2025-06-20': "Matariki",
+                '2025-10-27': "Labour Day",
+                '2025-12-25': "Christmas Day",
+                '2025-12-26': "Boxing Day",
+                // 2026 Prediction
+                '2026-01-01': "New Year's Day",
+                '2026-01-02': "Day after New Year's Day",
+                '2026-02-06': "Waitangi Day",
+                '2026-04-03': "Good Friday",
+                '2026-04-06': "Easter Monday",
+                '2026-04-25': "ANZAC Day",
+                '2026-06-01': "King's Birthday",
+                '2026-07-10': "Matariki",
+                '2026-10-26': "Labour Day",
+                '2026-12-25': "Christmas Day",
+                '2026-12-26': "Boxing Day"
+            }
+        };
         
         const COLLECTIONS = {
             'todo': 'To Do',
@@ -469,17 +602,11 @@
         };
 
         let itemsDataStore = {
-            'To Do': [],
-            'To Go': [],
-            'To Eat': [],
-            'To Buy': [],
-            'Recurring': [],
-            'Completed': []
+            'To Do': [], 'To Go': [], 'To Eat': [], 'To Buy': [], 'Recurring': [], 'Completed': []
         };
         
         let db = null;
 
-        // 🔥 請填入您的 Firebase 設定 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
     authDomain: "wiilc-family.firebaseapp.com",
@@ -496,57 +623,39 @@
                 if (banner) banner.style.display = 'block';
                 return;
             }
-
             try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 setupFirebaseListeners();
-            } catch (error) {
-                console.error("Firebase 初始化失敗: ", error);
-            }
+            } catch (error) { console.error("Firebase 初始化失敗: ", error); }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             initApp();
-
             window.addEventListener('scroll', () => {
                 const navbar = document.getElementById('navbar');
-                if (window.scrollY > 20) {
-                    navbar.classList.add('shrink');
-                } else {
-                    navbar.classList.remove('shrink');
-                }
+                if (window.scrollY > 20) navbar.classList.add('shrink');
+                else navbar.classList.remove('shrink');
             });
-
             document.addEventListener('click', (e) => {
-                if (!e.target.closest('.relative')) {
-                    document.querySelectorAll('.find-dropdown-menu').forEach(el => el.classList.add('hidden'));
-                }
+                if (!e.target.closest('.relative')) document.querySelectorAll('.find-dropdown-menu').forEach(el => el.classList.add('hidden'));
             });
-
-            switchTab('toeat');
+            switchTab('toeat'); // Default to To Eat
         });
             
         function setupFirebaseListeners() {
             if (!db) return;
-
             Object.values(COLLECTIONS).forEach(collectionName => {
                 db.collection(collectionName).onSnapshot((querySnapshot) => {
                     const collectionItems = [];
                     querySnapshot.forEach((doc) => {
                         collectionItems.push({ 
-                            id: doc.id, 
-                            ...doc.data(),
-                            sourceCollection: collectionName 
+                            id: doc.id, ...doc.data(), sourceCollection: collectionName 
                         });
                     });
-                    
                     itemsDataStore[collectionName] = collectionItems;
                     updateAllItemsAndRender();
-
-                }, (error) => {
-                    console.error(`Error from ${collectionName}: `, error);
-                });
+                }, (error) => console.error(`Error from ${collectionName}: `, error));
             });
         }
 
@@ -554,14 +663,118 @@
             items = Object.values(itemsDataStore).flat();
             renderList();
             calculateRecurringTotal();
+            if (currentTab !== 'calendar') {
+                const emptyState = document.getElementById('empty-state');
+                if (items.length === 0) {
+                    emptyState.textContent = "Loading items...";
+                    emptyState.classList.remove('hidden');
+                } else if (document.getElementById('list-container').children.length === 0) {
+                    emptyState.textContent = "No items found.";
+                    emptyState.classList.remove('hidden');
+                }
+            }
+        }
+
+        // --- Auto Emoji Logic ---
+        function getAutoEmoji(title) {
+            if (!title) return '';
+            const lowerTitle = title.toLowerCase();
+            const map = {
+                'gym': '🏋️', 'sport': '🏃', 'run': '🏃', 'walk': '🚶',
+                'doctor': '👨‍⚕️', 'med': '💊', 'hospital': '🏥',
+                'eat': '🍽️', 'dinner': '🍽️', 'lunch': '🍱', 'breakfast': '🥞', 'food': '🍔',
+                'shop': '🛍️', 'buy': '🛒', 'market': '🏪',
+                'study': '📚', 'book': '📖', 'read': '📖', 'school': '🏫',
+                'flight': '✈️', 'trip': '🧳', 'travel': '✈️',
+                'pay': '💸', 'bill': '🧾', 'rent': '🏠',
+                'car': '🚗', 'drive': '🚗',
+                'movie': '🎬', 'cinema': '🍿',
+                'birthday': '🎂', 'party': '🎉'
+            };
             
-            const emptyState = document.getElementById('empty-state');
-            if (items.length === 0) {
-                emptyState.textContent = "Loading items...";
-                emptyState.classList.remove('hidden');
-            } else if (document.getElementById('list-container').children.length === 0) {
-                emptyState.textContent = "No items found.";
-                emptyState.classList.remove('hidden');
+            // Check if title already starts with an emoji (simple regex)
+            if (/^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(title)) {
+                return ''; // Already has emoji
+            }
+
+            for (const key in map) {
+                if (lowerTitle.includes(key)) return map[key] + ' ';
+            }
+            return '';
+        }
+
+        // --- Calendar Logic ---
+        function setCalendarRegion(region) {
+            currentCalendarRegion = region;
+            
+            // Update UI buttons
+            document.querySelectorAll('.btn-region').forEach(btn => btn.classList.remove('active'));
+            if(region === 'HK') {
+                document.getElementById('btn-hk-d').classList.add('active');
+                document.getElementById('btn-hk-m').classList.add('active');
+            } else {
+                document.getElementById('btn-nz-d').classList.add('active');
+                document.getElementById('btn-nz-m').classList.add('active');
+            }
+            renderCalendar();
+        }
+
+        function changeMonth(delta) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            if (currentTab !== 'calendar') return;
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            
+            document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const daysInMonth = lastDay.getDate();
+            const startingDay = firstDay.getDay(); // 0 is Sunday
+            
+            const calendarDaysDiv = document.getElementById('calendar-days');
+            calendarDaysDiv.innerHTML = '';
+
+            // Blank days before start
+            for (let i = 0; i < startingDay; i++) {
+                const blank = document.createElement('div');
+                blank.className = 'calendar-day bg-gray-50';
+                calendarDaysDiv.appendChild(blank);
+            }
+
+            // Days
+            const holidays = PUBLIC_HOLIDAYS[currentCalendarRegion];
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                
+                // Construct Date String YYYY-MM-DD
+                const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                const dateObj = new Date(year, month, i);
+                const dayOfWeek = dateObj.getDay(); // 0 = Sunday
+                
+                const holidayName = holidays[dateString]; // Look up name directly
+                const isSunday = (dayOfWeek === 0);
+                
+                let textColorClass = 'text-black-day';
+                let holidayText = '';
+
+                if (holidayName) {
+                    textColorClass = 'text-red-holiday';
+                    holidayText = `<div class="holiday-name">${holidayName}</div>`;
+                } else if (isSunday) {
+                    textColorClass = 'text-red-holiday';
+                }
+
+                dayDiv.innerHTML = `<div class="day-number ${textColorClass}">${i}</div>${holidayText}`;
+                calendarDaysDiv.appendChild(dayDiv);
             }
         }
 
@@ -570,7 +783,6 @@
                 document.getElementById('recurring-summary').classList.add('hidden');
                 return;
             }
-
             let recurringItems = itemsDataStore['Recurring'] || [];
             if (currentFilter !== 'All') {
                 recurringItems = recurringItems.filter(item => {
@@ -578,9 +790,7 @@
                     return itemWho.includes(currentFilter) || itemWho.includes('All');
                 });
             }
-
             let monthlyTotal = 0;
-            
             recurringItems.forEach(item => {
                 if (item.payment && !isNaN(item.payment)) {
                     const amount = parseFloat(item.payment);
@@ -593,7 +803,6 @@
                     }
                 }
             });
-
             const formattedTotal = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(monthlyTotal);
             document.getElementById('recurring-total-display').textContent = `Average Payment NZ$${formattedTotal} / mo`;
             document.getElementById('recurring-summary').classList.remove('hidden');
@@ -611,20 +820,18 @@
             currentFilter = who;
             document.getElementById('find-label-d').textContent = `Find: ${who}`;
             document.getElementById('find-label-m').textContent = `Find: ${who}`;
-            
             document.querySelectorAll('.find-option').forEach(opt => {
                 if(opt.textContent === who) opt.classList.add('active');
                 else opt.classList.remove('active');
             });
-
             document.querySelectorAll('.find-dropdown-menu').forEach(el => el.classList.add('hidden'));
-            
             renderList();
             calculateRecurringTotal();
         }
 
         function getTabDisplayName(tab) {
             const names = {
+                'calendar': '🗓️ HK／NZ Holiday',
                 'todo': '🛠️ To Do',
                 'togo': '🚀 To Go',
                 'toeat': '🍟 To Eat',
@@ -651,6 +858,9 @@
             currentTab = tabName;
             closeMobileMenu();
             
+            // Reset Filter to All
+            setFilter('All'); 
+
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.classList.remove('bg-[#4169E1]', 'text-white', 'shadow-md');
                 btn.classList.add('text-gray-600', 'hover:bg-blue-50');
@@ -668,6 +878,7 @@
             }
 
             const desktopTitles = {
+                'calendar': '🗓️ HK／NZ Holiday',
                 'todo': '🛠️ To Do List',
                 'togo': '🚀 Places To Go',
                 'toeat': '🍟 Food To Eat',
@@ -676,6 +887,7 @@
                 'completed': '🏁 Completed History'
             };
             const mobileTitles = {
+                'calendar': '🗓️ HK／NZ Holiday',
                 'todo': '🛠️ To Do',
                 'togo': '🚀 To Go',
                 'toeat': '🍟 To Eat',
@@ -687,20 +899,54 @@
             document.getElementById('desktop-page-title').textContent = desktopTitles[tabName];
             document.getElementById('mobile-page-title').textContent = mobileTitles[tabName];
 
+            // Toggle UI Elements based on tab
             const desktopAdd = document.getElementById('desktop-add-container');
-            const mobileAdd = document.getElementById('mobile-add-btn');
+            const mobileAdd = document.getElementById('mobile-add-container');
+            const desktopFind = document.getElementById('desktop-find-container');
+            const mobileFind = document.getElementById('mobile-find-container');
             
-            if (tabName === 'completed') {
-                if(desktopAdd) desktopAdd.style.visibility = 'hidden';
-                if(mobileAdd) mobileAdd.style.display = 'none';
-                document.getElementById('version-footer').classList.remove('hidden');
-            } else {
-                if(desktopAdd) desktopAdd.style.visibility = 'visible';
-                if(mobileAdd) mobileAdd.style.display = 'flex';
-                document.getElementById('version-footer').classList.add('hidden');
-            }
+            const desktopCalCtrl = document.getElementById('desktop-calendar-controls');
+            const mobileCalCtrl = document.getElementById('mobile-calendar-controls');
+            const calendarView = document.getElementById('calendar-view');
+            const listView = document.getElementById('list-container');
+            const versionFooter = document.getElementById('version-footer');
 
-            renderList();
+            if (tabName === 'calendar') {
+                // Calendar Mode
+                desktopAdd.style.visibility = 'hidden';
+                mobileAdd.style.display = 'none';
+                desktopFind.style.display = 'none';
+                mobileFind.style.display = 'none';
+                
+                desktopCalCtrl.classList.remove('hidden');
+                mobileCalCtrl.classList.remove('hidden');
+                calendarView.classList.remove('hidden');
+                listView.classList.add('hidden');
+                versionFooter.classList.add('hidden');
+                
+                renderCalendar();
+            } else {
+                // List Mode
+                desktopCalCtrl.classList.add('hidden');
+                mobileCalCtrl.classList.add('hidden');
+                calendarView.classList.add('hidden');
+                listView.classList.remove('hidden');
+                
+                desktopFind.style.display = 'block';
+                mobileFind.style.display = 'block';
+
+                if (tabName === 'completed') {
+                    desktopAdd.style.visibility = 'hidden';
+                    mobileAdd.style.display = 'none';
+                    versionFooter.classList.remove('hidden');
+                } else {
+                    desktopAdd.style.visibility = 'visible';
+                    mobileAdd.style.display = 'block';
+                    versionFooter.classList.add('hidden');
+                }
+                
+                renderList();
+            }
             calculateRecurringTotal();
         }
 
@@ -713,26 +959,20 @@
             return `${d}-${m}-${y}`;
         }
 
-        // --- Weather Logic (With Temperature) ---
         function getWeatherEmoji(dateStr, location) {
             if (!dateStr) return '';
             const date = new Date(dateStr);
             const month = date.getMonth(); 
-            
             const isSummer = (month >= 11 || month <= 1);
             const isWinter = (month >= 5 && month <= 7);
-            
             const locationSeed = location ? location.length : 0;
             const daySeed = date.getDate();
             const randomness = (locationSeed + daySeed) % 10; 
-            
             const sunny = ['☀️', '🌤️', '😎', '🏖️'];
             const rainy = ['🌧️', '🌦️', '☔', '☁️'];
             const neutral = ['☁️', '⛅', '💨'];
-            
             let emoji = '';
-            let tempRange = [15, 20]; // Default
-
+            let tempRange = [15, 20];
             if (isSummer) {
                 emoji = randomness > 2 ? sunny[randomness % sunny.length] : neutral[0];
                 tempRange = [20, 28];
@@ -743,30 +983,22 @@
                 emoji = neutral[randomness % neutral.length];
                 tempRange = [12, 22];
             }
-            
             const temp = tempRange[0] + (randomness % (tempRange[1] - tempRange[0]));
             const locText = location ? location : "New Zealand";
-            
             return `${emoji} ${temp}°C in ${locText}`;
         }
 
-        // Update Weather
         function updateWeatherDisplay() {
             let displayDiv = null;
             let locationVal = '';
-            
             if (currentTab === 'togo') {
                 displayDiv = document.getElementById('weather-display');
                 locationVal = document.getElementById('input-where').value;
             } else if (currentTab === 'toeat' || currentTab === 'todo' || currentTab === 'tobuy' || currentTab === 'recurring') {
                 displayDiv = document.getElementById('weather-display-eat');
                 locationVal = document.getElementById('input-location').value;
-            } else {
-                return;
-            }
-            
+            } else { return; }
             const dateVal = document.getElementById('input-deadline').value;
-            
             if (dateVal && displayDiv) {
                 const weatherText = getWeatherEmoji(dateVal, locationVal);
                 displayDiv.textContent = `Forecast: ${weatherText}`;
@@ -779,112 +1011,64 @@
         function renderList() {
             const container = document.getElementById('list-container');
             container.innerHTML = '';
-
             let filteredItems = items.filter(item => {
                 let isMatchTab = false;
-                if (currentTab === 'completed') {
-                    isMatchTab = (item.sourceCollection === 'Completed');
-                } else {
-                    isMatchTab = (item.sourceCollection === COLLECTIONS[currentTab]);
-                }
-
+                if (currentTab === 'completed') isMatchTab = (item.sourceCollection === 'Completed');
+                else isMatchTab = (item.sourceCollection === COLLECTIONS[currentTab]);
                 let isMatchUser = true;
                 if (currentFilter !== 'All') {
                     const itemWho = item.forWho || [];
                     isMatchUser = itemWho.includes(currentFilter) || itemWho.includes('All');
                 }
-
                 return isMatchTab && isMatchUser;
             });
-
             filteredItems.sort((a, b) => b.number - a.number);
-
-            const emptyState = document.getElementById('empty-state');
-            if (filteredItems.length === 0) {
-                emptyState.textContent = "No items found.";
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                
-                filteredItems.forEach((item) => {
-                    const div = document.createElement('div');
-                    div.className = 'item-card'; // Use card class instead of tr styling
-                    div.onclick = (e) => {
-                        if (!e.target.closest('.btn-link') && !e.target.closest('.btn-map-link')) {
-                            openEditModal(item.id, item.sourceCollection);
+            filteredItems.forEach((item) => {
+                const div = document.createElement('div');
+                div.className = 'item-card'; 
+                div.onclick = (e) => {
+                    if (!e.target.closest('.btn-link') && !e.target.closest('.btn-map-link')) {
+                        openEditModal(item.id, item.sourceCollection);
+                    }
+                };
+                const itemWho = item.forWho || [];
+                const tagsHtml = itemWho.map(p => `<span class="display-chip">${p}</span>`).join(' ');
+                const topRow = `<div class="flex items-center gap-3 mb-1"><span class="font-mono text-gray-500 font-bold text-xl">#${item.number}</span><div class="flex flex-wrap gap-1">${tagsHtml}</div></div>`;
+                const titleRow = `<div class="font-bold text-[#4169E1] mb-2 text-xl break-words">${item.title}</div>`;
+                let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
+                if (item.tab === 'recurring') {
+                    if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
+                    if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
+                } else {
+                    if (item.deadline) {
+                        let weatherHtml = '';
+                        if (item.tab === 'togo') {
+                            const weatherText = getWeatherEmoji(item.deadline, item.where);
+                            const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
+                            weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+                        } else if (item.tab === 'toeat') {
+                            const weatherText = getWeatherEmoji(item.deadline, item.location);
+                            const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
+                            weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+                        } else if (item.location) {
+                            const weatherText = getWeatherEmoji(item.deadline, item.location);
+                            const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
+                            weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
                         }
-                    };
-
-                    const itemWho = item.forWho || [];
-                    const tagsHtml = itemWho.map(p => `<span class="display-chip">${p}</span>`).join(' ');
-                    const topRow = `
-                        <div class="flex items-center gap-3 mb-1">
-                            <span class="font-mono text-gray-500 font-bold text-xl">#${item.number}</span>
-                            <div class="flex flex-wrap gap-1">${tagsHtml}</div>
-                        </div>
-                    `;
-
-                    const titleRow = `
-                        <div class="font-bold text-[#4169E1] mb-2 text-xl break-words">${item.title}</div>
-                    `;
-
-                    let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
-                    
-                    if (item.tab === 'recurring') {
-                        if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
-                        if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
-                    } else {
-                        if (item.deadline) {
-                            let weatherHtml = '';
-                            if (item.tab === 'togo') {
-                                const weatherText = getWeatherEmoji(item.deadline, item.where);
-                                const emoji = weatherText.split(' ')[0]; 
-                                const temp = weatherText.split(' ')[1];
-                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
-                            } else if (item.tab === 'toeat') {
-                                const weatherText = getWeatherEmoji(item.deadline, item.location);
-                                const emoji = weatherText.split(' ')[0]; 
-                                const temp = weatherText.split(' ')[1];
-                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
-                            }
-                            // Simplified weather check for other tabs using location
-                            else if (item.location) {
-                                const weatherText = getWeatherEmoji(item.deadline, item.location);
-                                const emoji = weatherText.split(' ')[0];
-                                const temp = weatherText.split(' ')[1];
-                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
-                            }
-                            
-                            const iconClass = (item.tab === 'togo' || item.tab === 'toeat') ? 'fa-plane-departure' : 'fa-calendar-alt';
-                            detailsHtml += `<span><i class="fas ${iconClass} mr-1"></i> ${formatDate(item.deadline)} ${weatherHtml}</span>`;
-                        }
-                        
-                        if (item.where) detailsHtml += `<span><i class="fas fa-map-marker-alt mr-1"></i> ${item.where}</span>`;
-                        if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
-                        if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`;
-                        
-                        if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
+                        const iconClass = (item.tab === 'togo' || item.tab === 'toeat') ? 'fa-plane-departure' : 'fa-calendar-alt';
+                        detailsHtml += `<span><i class="fas ${iconClass} mr-1"></i> ${formatDate(item.deadline)} ${weatherHtml}</span>`;
                     }
-                    
-                    // Maps Link (New Icon)
-                    if (item.mapsLink) {
-                        detailsHtml += `<a href="${item.mapsLink}" target="_blank" class="btn-map-link"><i class="fas fa-map-marker-alt"></i> Map</a>`;
-                    }
-
-                    // Regular URL Link
-                    if (item.url) {
-                        detailsHtml += `<a href="${item.url}" target="_blank" class="btn-link"><i class="fas fa-link"></i> Link</a>`;
-                    }
-                    detailsHtml += '</div>';
-
-                    div.innerHTML = `
-                        ${topRow}
-                        ${titleRow}
-                        ${detailsHtml}
-                    `;
-                    container.appendChild(div);
-                });
-            }
+                    if (item.where) detailsHtml += `<span><i class="fas fa-map-marker-alt mr-1"></i> ${item.where}</span>`;
+                    if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
+                    if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`;
+                    if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
+                }
+                if (item.mapsLink) detailsHtml += `<a href="${item.mapsLink}" target="_blank" class="btn-map-link"><i class="fas fa-map-marker-alt"></i> Map</a>`;
+                if (item.url) detailsHtml += `<a href="${item.url}" target="_blank" class="btn-link"><i class="fas fa-link"></i> Link</a>`;
+                detailsHtml += '</div>';
+                div.innerHTML = `${topRow}${titleRow}${detailsHtml}`;
+                container.appendChild(div);
+            });
         }
 
         function openModal() {
@@ -892,19 +1076,18 @@
             isEditMode = false;
             resetForm();
             setupFormFields(currentTab);
-            
             const tabName = getTabDisplayName(currentTab);
-            
             document.getElementById('modal-title').textContent = 'Add Item';
-            document.getElementById('label-title').textContent = `${tabName} Heading`; // Title renamed to Heading in modal
+            document.getElementById('label-title').textContent = `${tabName} Heading`;
             const saveBtn = document.getElementById('btn-save-new');
             saveBtn.textContent = `${tabName} Add Item`;
             saveBtn.classList.remove('hidden');
-            
             document.getElementById('edit-buttons').classList.add('hidden');
-            
             document.getElementById('weather-display').classList.add('hidden');
             document.getElementById('weather-display-eat').classList.add('hidden');
+            
+            // Scroll to top
+            document.getElementById('modal-content-scroll').scrollTop = 0;
             
             document.getElementById('item-modal').classList.remove('hidden');
         }
@@ -913,43 +1096,34 @@
             isEditMode = true;
             const item = items.find(i => i.id === id && i.sourceCollection === sourceCollection);
             if (!item) return;
-
             resetForm();
             setupFormFields(item.tab);
-            
             const tabName = getTabDisplayName(item.tab);
             document.getElementById('label-title').textContent = `${tabName} Heading`;
-
             const idInput = document.getElementById('item-id');
             idInput.value = item.id;
             idInput.dataset.collection = sourceCollection; 
-
             document.getElementById('input-title').value = item.title;
             document.getElementById('input-url').value = item.url || '';
             document.getElementById('input-content').value = item.content || '';
             document.getElementById('input-remark').value = item.remark || '';
-            document.getElementById('input-maps-link').value = item.mapsLink || ''; // Load mapsLink
-
+            document.getElementById('input-maps-link').value = item.mapsLink || ''; 
             const itemWho = item.forWho || [];
             document.querySelectorAll('.select-chip').forEach(chip => {
-                if (itemWho.includes(chip.dataset.value)) {
-                    chip.classList.add('selected');
-                }
+                if (itemWho.includes(chip.dataset.value)) chip.classList.add('selected');
             });
-
             if (document.getElementById('input-deadline')) document.getElementById('input-deadline').value = item.deadline || '';
             if (document.getElementById('input-frequency')) document.getElementById('input-frequency').value = item.frequency || '';
             if (document.getElementById('input-where')) document.getElementById('input-where').value = item.where || '';
             if (document.getElementById('input-restaurant')) document.getElementById('input-restaurant').value = item.restaurant || '';
             if (document.getElementById('input-location')) document.getElementById('input-location').value = item.location || '';
             if (document.getElementById('input-payment')) document.getElementById('input-payment').value = item.payment || '';
+            if (document.getElementById('input-enddate')) document.getElementById('input-enddate').value = item.endDate || ''; // Load End Date
 
             updateWeatherDisplay();
-
             document.getElementById('modal-title').textContent = 'Edit / View Item'; 
             document.getElementById('btn-save-new').classList.add('hidden');
             document.getElementById('edit-buttons').classList.remove('hidden');
-
             const toggleBtn = document.getElementById('btn-toggle-complete');
             if (item.isCompleted) {
                 toggleBtn.textContent = 'Return Back';
@@ -958,68 +1132,60 @@
                 toggleBtn.textContent = 'Move to Completed';
                 toggleBtn.className = 'btn-success w-full shadow-md';
             }
+            
+            // Scroll to top
+            document.getElementById('modal-content-scroll').scrollTop = 0;
 
             document.getElementById('item-modal').classList.remove('hidden');
         }
 
-        function closeModal() {
-            document.getElementById('item-modal').classList.add('hidden');
-        }
-
+        function closeModal() { document.getElementById('item-modal').classList.add('hidden'); }
         document.getElementById('item-modal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('item-modal')) {
-                closeModal();
-            }
+            if (e.target === document.getElementById('item-modal')) closeModal();
         });
 
         function setupFormFields(tab) {
-            const fields = ['deadline', 'frequency', 'payment', 'where', 'restaurant', 'location', 'maps-link'];
+            const fields = ['deadline', 'frequency', 'payment', 'enddate', 'where', 'restaurant', 'location', 'maps-link'];
             fields.forEach(f => document.getElementById(`field-${f}`).classList.add('hidden'));
-
-            // Default labels
             document.getElementById('label-where').textContent = 'Location';
             document.getElementById('label-url').textContent = 'URL';
             document.getElementById('label-deadline').textContent = 'Deadline (if any)';
 
             if (tab === 'todo') {
                 document.getElementById('field-deadline').classList.remove('hidden');
-                document.getElementById('field-location').classList.remove('hidden'); // Added Location
-                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
+                document.getElementById('field-location').classList.remove('hidden');
+                document.getElementById('field-maps-link').classList.remove('hidden');
             } else if (tab === 'togo') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-where').classList.remove('hidden');
-                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
+                document.getElementById('field-maps-link').classList.remove('hidden');
                 document.getElementById('label-where').textContent = 'Location';
-                document.getElementById('label-url').textContent = 'URL'; // Renamed per request
+                document.getElementById('label-url').textContent = 'URL';
                 document.getElementById('label-deadline').textContent = 'Departure Date (if any)';
             } else if (tab === 'toeat') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-restaurant').classList.remove('hidden');
                 document.getElementById('field-location').classList.remove('hidden');
-                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
-                document.getElementById('label-url').textContent = 'URL'; // Renamed per request
+                document.getElementById('field-maps-link').classList.remove('hidden');
+                document.getElementById('label-url').textContent = 'URL';
                 document.getElementById('label-deadline').textContent = 'Departure Date (if any)';
             } else if (tab === 'tobuy') {
                 document.getElementById('field-deadline').classList.remove('hidden');
-                document.getElementById('field-location').classList.remove('hidden'); // Added Location
-                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
+                document.getElementById('field-location').classList.remove('hidden');
+                document.getElementById('field-maps-link').classList.remove('hidden');
             } else if (tab === 'recurring') {
                 document.getElementById('field-frequency').classList.remove('hidden');
                 document.getElementById('field-payment').classList.remove('hidden');
-                document.getElementById('field-location').classList.remove('hidden'); // Added Location
-                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
+                document.getElementById('field-enddate').classList.remove('hidden'); // Added End Date
+                document.getElementById('field-location').classList.remove('hidden');
+                document.getElementById('field-maps-link').classList.remove('hidden');
             }
         }
 
-        function toggleWho(el) {
-            el.classList.toggle('selected');
-        }
-
+        function toggleWho(el) { el.classList.toggle('selected'); }
         function getSelectedWho() {
             const selected = [];
-            document.querySelectorAll('.select-chip.selected').forEach(el => {
-                selected.push(el.dataset.value);
-            });
+            document.querySelectorAll('.select-chip.selected').forEach(el => selected.push(el.dataset.value));
             return selected;
         }
 
@@ -1035,6 +1201,7 @@
             document.getElementById('input-location').value = '';
             document.getElementById('input-frequency').value = '';
             document.getElementById('input-payment').value = '';
+            document.getElementById('input-enddate').value = '';
             document.getElementById('input-maps-link').value = '';
             document.querySelectorAll('.select-chip').forEach(el => el.classList.remove('selected'));
         }
@@ -1046,8 +1213,12 @@
 
         function saveNewItem() {
             if (!db) { alert("Please connect Firebase!"); return; }
-            const title = document.getElementById('input-title').value.trim();
+            let title = document.getElementById('input-title').value.trim();
             if (!title) { alert('Please enter a Heading!'); return; }
+
+            // Auto-Emoji Logic
+            const emoji = getAutoEmoji(title);
+            if(emoji) title = emoji + title;
 
             const newNumber = generateUniqueNumber();
             const collectionName = getCollectionNameByTab(currentTab);
@@ -1064,6 +1235,7 @@
                 deadline: document.getElementById('input-deadline').value,
                 frequency: document.getElementById('input-frequency').value,
                 payment: document.getElementById('input-payment').value,
+                endDate: document.getElementById('input-enddate').value, // Save End Date
                 where: document.getElementById('input-where').value,
                 restaurant: document.getElementById('input-restaurant').value,
                 location: document.getElementById('input-location').value,
@@ -1086,6 +1258,7 @@
                 deadline: document.getElementById('input-deadline').value,
                 frequency: document.getElementById('input-frequency').value,
                 payment: document.getElementById('input-payment').value,
+                endDate: document.getElementById('input-enddate').value, // Update End Date
                 where: document.getElementById('input-where').value,
                 restaurant: document.getElementById('input-restaurant').value,
                 location: document.getElementById('input-location').value,
