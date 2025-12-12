@@ -406,7 +406,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.15
+            V1.16
         </div>
     </main>
 
@@ -519,7 +519,7 @@
 
     <script>
         let items = [];
-        let currentTab = 'toeat'; // Default tab set to 'toeat'
+        let currentTab = 'toeat'; 
         let currentFilter = 'All';
         let isEditMode = false;
         
@@ -543,25 +543,26 @@
                 '2025-05-31': '端午節',
                 '2025-07-01': '特區成立紀念日',
                 '2025-10-01': '國慶日',
-                '2025-10-07': '中秋節翌日', // Correction: 2025 Mid-Autumn is Oct 6, holiday Oct 7
+                '2025-10-07': '中秋節翌日', 
                 '2025-10-29': '重陽節',
                 '2025-12-25': '聖誕節',
                 '2025-12-26': '聖誕節後第一個周日',
-                // 2026 Prediction
-                '2026-01-01': '元旦',
+                // 2026 Updated by User Request
+                '2026-01-01': '一月一日',
                 '2026-02-17': '農曆年初一',
                 '2026-02-18': '農曆年初二',
                 '2026-02-19': '農曆年初三',
                 '2026-04-03': '耶穌受難節',
-                '2026-04-04': '耶穌受難節翌日/清明節',
-                '2026-04-06': '復活節星期一',
+                '2026-04-04': '耶穌受難節翌日',
+                '2026-04-06': '清明節翌日',
+                '2026-04-07': '復活節星期一翌日',
                 '2026-05-01': '勞動節',
-                '2026-05-25': '佛誕',
+                '2026-05-25': '佛誕翌日',
                 '2026-06-19': '端午節',
-                '2026-07-01': '特區成立紀念日',
+                '2026-07-01': '香港特別行政區成立紀念日',
                 '2026-09-26': '中秋節翌日',
                 '2026-10-01': '國慶日',
-                '2026-10-19': '重陽節',
+                '2026-10-19': '重陽節翌日',
                 '2026-12-25': '聖誕節',
                 '2026-12-26': '聖誕節後第一個周日'
             },
@@ -663,13 +664,13 @@
             items = Object.values(itemsDataStore).flat();
             renderList();
             calculateRecurringTotal();
+            
+            // Only handle "Loading" state here. "No items found" is handled by renderList
             if (currentTab !== 'calendar') {
                 const emptyState = document.getElementById('empty-state');
+                // Only show loading if we have ABSOLUTELY no items loaded yet (initial load)
                 if (items.length === 0) {
                     emptyState.textContent = "Loading items...";
-                    emptyState.classList.remove('hidden');
-                } else if (document.getElementById('list-container').children.length === 0) {
-                    emptyState.textContent = "No items found.";
                     emptyState.classList.remove('hidden');
                 }
             }
@@ -1010,7 +1011,12 @@
 
         function renderList() {
             const container = document.getElementById('list-container');
+            const emptyState = document.getElementById('empty-state');
             container.innerHTML = '';
+            
+            // Force hide empty state initially before checking count
+            emptyState.classList.add('hidden');
+
             let filteredItems = items.filter(item => {
                 let isMatchTab = false;
                 if (currentTab === 'completed') isMatchTab = (item.sourceCollection === 'Completed');
@@ -1023,52 +1029,62 @@
                 return isMatchTab && isMatchUser;
             });
             filteredItems.sort((a, b) => b.number - a.number);
-            filteredItems.forEach((item) => {
-                const div = document.createElement('div');
-                div.className = 'item-card'; 
-                div.onclick = (e) => {
-                    if (!e.target.closest('.btn-link') && !e.target.closest('.btn-map-link')) {
-                        openEditModal(item.id, item.sourceCollection);
-                    }
-                };
-                const itemWho = item.forWho || [];
-                const tagsHtml = itemWho.map(p => `<span class="display-chip">${p}</span>`).join(' ');
-                const topRow = `<div class="flex items-center gap-3 mb-1"><span class="font-mono text-gray-500 font-bold text-xl">#${item.number}</span><div class="flex flex-wrap gap-1">${tagsHtml}</div></div>`;
-                const titleRow = `<div class="font-bold text-[#4169E1] mb-2 text-xl break-words">${item.title}</div>`;
-                let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
-                if (item.tab === 'recurring') {
-                    if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
-                    if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
-                } else {
-                    if (item.deadline) {
-                        let weatherHtml = '';
-                        if (item.tab === 'togo') {
-                            const weatherText = getWeatherEmoji(item.deadline, item.where);
-                            const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
-                            weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
-                        } else if (item.tab === 'toeat') {
-                            const weatherText = getWeatherEmoji(item.deadline, item.location);
-                            const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
-                            weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
-                        } else if (item.location) {
-                            const weatherText = getWeatherEmoji(item.deadline, item.location);
-                            const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
-                            weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+            
+            if (filteredItems.length === 0) {
+                emptyState.textContent = "No items found.";
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden'); // Ensure hidden if items exist
+                
+                filteredItems.forEach((item) => {
+                    const div = document.createElement('div');
+                    div.className = 'item-card'; 
+                    div.onclick = (e) => {
+                        if (!e.target.closest('.btn-link') && !e.target.closest('.btn-map-link')) {
+                            openEditModal(item.id, item.sourceCollection);
                         }
-                        const iconClass = (item.tab === 'togo' || item.tab === 'toeat') ? 'fa-plane-departure' : 'fa-calendar-alt';
-                        detailsHtml += `<span><i class="fas ${iconClass} mr-1"></i> ${formatDate(item.deadline)} ${weatherHtml}</span>`;
+                    };
+                    const itemWho = item.forWho || [];
+                    const tagsHtml = itemWho.map(p => `<span class="display-chip">${p}</span>`).join(' ');
+                    const topRow = `<div class="flex items-center gap-3 mb-1"><span class="font-mono text-gray-500 font-bold text-xl">#${item.number}</span><div class="flex flex-wrap gap-1">${tagsHtml}</div></div>`;
+                    const titleRow = `<div class="font-bold text-[#4169E1] mb-2 text-xl break-words">${item.title}</div>`;
+                    let detailsHtml = '<div class="flex flex-wrap gap-4 text-sm text-gray-600 items-center">';
+                    if (item.tab === 'recurring') {
+                        if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
+                        if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
+                        // Updated: Show End Date if exists
+                        if (item.endDate) detailsHtml += `<span class="text-gray-500 ml-2">End: ${formatDate(item.endDate)}</span>`;
+                    } else {
+                        if (item.deadline) {
+                            let weatherHtml = '';
+                            if (item.tab === 'togo') {
+                                const weatherText = getWeatherEmoji(item.deadline, item.where);
+                                const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
+                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+                            } else if (item.tab === 'toeat') {
+                                const weatherText = getWeatherEmoji(item.deadline, item.location);
+                                const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
+                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+                            } else if (item.location) {
+                                const weatherText = getWeatherEmoji(item.deadline, item.location);
+                                const emoji = weatherText.split(' ')[0]; const temp = weatherText.split(' ')[1];
+                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+                            }
+                            const iconClass = (item.tab === 'togo' || item.tab === 'toeat') ? 'fa-plane-departure' : 'fa-calendar-alt';
+                            detailsHtml += `<span><i class="fas ${iconClass} mr-1"></i> ${formatDate(item.deadline)} ${weatherHtml}</span>`;
+                        }
+                        if (item.where) detailsHtml += `<span><i class="fas fa-map-marker-alt mr-1"></i> ${item.where}</span>`;
+                        if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
+                        if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`;
+                        if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
                     }
-                    if (item.where) detailsHtml += `<span><i class="fas fa-map-marker-alt mr-1"></i> ${item.where}</span>`;
-                    if (item.restaurant) detailsHtml += `<span><i class="fas fa-utensils mr-1"></i> ${item.restaurant}</span>`;
-                    if (item.location) detailsHtml += `<span><i class="fas fa-map-pin mr-1"></i> ${item.location}</span>`;
-                    if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
-                }
-                if (item.mapsLink) detailsHtml += `<a href="${item.mapsLink}" target="_blank" class="btn-map-link"><i class="fas fa-map-marker-alt"></i> Map</a>`;
-                if (item.url) detailsHtml += `<a href="${item.url}" target="_blank" class="btn-link"><i class="fas fa-link"></i> Link</a>`;
-                detailsHtml += '</div>';
-                div.innerHTML = `${topRow}${titleRow}${detailsHtml}`;
-                container.appendChild(div);
-            });
+                    if (item.mapsLink) detailsHtml += `<a href="${item.mapsLink}" target="_blank" class="btn-map-link"><i class="fas fa-map-marker-alt"></i> Map</a>`;
+                    if (item.url) detailsHtml += `<a href="${item.url}" target="_blank" class="btn-link"><i class="fas fa-link"></i> Link</a>`;
+                    detailsHtml += '</div>';
+                    div.innerHTML = `${topRow}${titleRow}${detailsHtml}`;
+                    container.appendChild(div);
+                });
+            }
         }
 
         function openModal() {
@@ -1086,10 +1102,13 @@
             document.getElementById('weather-display').classList.add('hidden');
             document.getElementById('weather-display-eat').classList.add('hidden');
             
-            // Scroll to top
-            document.getElementById('modal-content-scroll').scrollTop = 0;
-            
             document.getElementById('item-modal').classList.remove('hidden');
+            
+            // Robust scroll to top logic
+            setTimeout(() => {
+                const scrollContainer = document.getElementById('modal-content-scroll');
+                if(scrollContainer) scrollContainer.scrollTop = 0;
+            }, 10);
         }
 
         function openEditModal(id, sourceCollection) {
@@ -1133,10 +1152,13 @@
                 toggleBtn.className = 'btn-success w-full shadow-md';
             }
             
-            // Scroll to top
-            document.getElementById('modal-content-scroll').scrollTop = 0;
-
             document.getElementById('item-modal').classList.remove('hidden');
+            
+            // Robust scroll to top logic
+            setTimeout(() => {
+                const scrollContainer = document.getElementById('modal-content-scroll');
+                if(scrollContainer) scrollContainer.scrollTop = 0;
+            }, 10);
         }
 
         function closeModal() { document.getElementById('item-modal').classList.add('hidden'); }
