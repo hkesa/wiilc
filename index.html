@@ -102,6 +102,21 @@
         }
         .btn-link:hover { background: #dbeafe; }
 
+        .btn-map-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            color: #d946ef; /* Fuchsia for map pin */
+            font-weight: bold;
+            text-decoration: none;
+            background: #fae8ff;
+            padding: 2px 10px;
+            border-radius: 8px;
+            border: 1px solid #f0abfc;
+            transition: background 0.2s;
+        }
+        .btn-map-link:hover { background: #f5d0fe; }
+
         /* 卡片玻璃擬態 */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
@@ -111,16 +126,31 @@
             box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
         }
 
+        /* 列表項目卡片 (V1.13) */
+        .item-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 7px; /* 7px 距離 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: transform 0.1s, box-shadow 0.1s;
+            cursor: pointer;
+        }
+        .item-card:active {
+            transform: scale(0.99);
+            background-color: #f9fafb;
+        }
+
         /* 輸入框強制白色背景 (解決 iOS 日期灰底問題) */
         input, select, textarea {
             background-color: #ffffff !important;
-            -webkit-appearance: none; /* 移除 iOS 預設樣式 */
+            -webkit-appearance: none;
             appearance: none;
         }
-        /* 針對 Date input 特別加強，移除 min-height 以修正 Chrome 顯示過長問題 */
+        /* 針對 Date input 特別加強 */
         input[type="date"] {
             background-color: #ffffff !important;
-            /* min-height: 50px;  <-- 移除此行，讓 p-3 自然撐開 */
         }
 
         .select-chip {
@@ -152,14 +182,6 @@
             display: inline-block;
         }
 
-        table { width: 100%; border-collapse: collapse; }
-        td { text-align: left; padding: 15px 15px; vertical-align: top; border-bottom: 1px solid rgba(0,0,0,0.05); }
-        thead { display: none; }
-
-        tbody tr:nth-child(odd) { background-color: rgba(255, 255, 255, 0.4); }
-        tbody tr:nth-child(even) { background-color: rgba(240, 248, 255, 0.6); }
-        tbody tr:hover { background-color: rgba(255, 255, 255, 0.9) !important; cursor: pointer; }
-
         #mobile-menu {
             transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
             max-height: 0;
@@ -190,23 +212,29 @@
             pointer-events: none; z-index: 9999;
         }
 
-        /* -------------------------------------------
-           🔥 V1.12 Mobile Modal Fix (調整間距) 🔥
-           ------------------------------------------- */
+        /* V1.12 Mobile Modal Fix */
         #item-modal {
-            align-items: flex-start !important; /* 強制靠上，不置中 */
-            padding-top: 96px !important;       /* 縮減頂部間距 (約 6rem)，比之前的 120px 短 */
-            padding-bottom: 80px;               /* 預留底部空間 */
-            overflow-y: auto;                   /* 允許外層容器滾動 */
+            align-items: flex-start !important;
+            padding-top: 96px !important;
+            padding-bottom: 80px;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;  
         }
         
         @media (min-width: 640px) {
             #item-modal {
-                align-items: center !important; /* 電腦版維持垂直置中 */
+                align-items: center !important;
                 padding-top: 2rem !important;
                 padding-bottom: 2rem;
             }
+        }
+
+        /* V1.13 Add Item Modal Title Style */
+        #modal-title {
+            text-align: center;
+            font-size: 21px !important; /* 18px + 3px */
+            font-weight: bold;
+            width: 100%;
         }
     </style>
 </head>
@@ -251,7 +279,7 @@
     <!-- 主要內容區 -->
     <main class="max-w-6xl mx-auto mt-28 px-4">
         
-        <!-- Header 區塊 (Find / Title / Add) -->
+        <!-- Header 區塊 -->
         <div class="hidden md:grid grid-cols-3 items-center mb-6 glass-card p-4 relative z-20">
             <div class="relative">
                 <button onclick="toggleFindDropdown(this)" id="btn-find-desktop" class="btn-find">
@@ -305,20 +333,17 @@
             </div>
         </div>
 
-        <!-- 列表顯示區 -->
-        <div class="glass-card overflow-hidden p-0 mb-6">
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <tbody id="list-container"></tbody>
-                </table>
-                <div id="empty-state" class="hidden text-center py-10 text-gray-500">
-                    Loading items...
-                </div>
-            </div>
+        <!-- 列表顯示區 (Div-based List) -->
+        <div id="list-container" class="mb-6">
+            <!-- JS 動態插入 .item-card -->
+        </div>
+        
+        <div id="empty-state" class="hidden text-center py-10 text-gray-500 glass-card">
+            Loading items...
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.12
+            V1.13
         </div>
     </main>
 
@@ -337,13 +362,14 @@
                 <input type="hidden" id="item-id">
                 
                 <div>
-                    <label id="label-title" class="block text-gray-600 mb-1 font-bold">Title</label>
-                    <input type="text" id="input-title" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-[#4169E1] transition-colors" placeholder="Enter title...">
+                    <label id="label-title" class="block text-gray-600 mb-1 font-bold">Heading</label>
+                    <input type="text" id="input-title" class="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:border-[#4169E1] transition-colors" placeholder="Enter heading...">
                 </div>
 
                 <div>
                     <label class="block text-gray-600 mb-1 font-bold">For Who</label>
-                    <div id="who-container" class="flex flex-wrap gap-1">
+                    <!-- Added border similar to input fields -->
+                    <div id="who-container" class="flex flex-wrap gap-1 border border-gray-300 rounded-lg p-3">
                         <span class="select-chip" onclick="toggleWho(this)" data-value="All">All</span>
                         <span class="select-chip" onclick="toggleWho(this)" data-value="Sabrina">Sabrina</span>
                         <span class="select-chip" onclick="toggleWho(this)" data-value="Agatha">Agatha</span>
@@ -374,6 +400,7 @@
                     <input type="date" id="input-deadline" class="w-full border border-gray-300 rounded-lg p-3 bg-white appearance-none" onchange="updateWeatherDisplay()">
                 </div>
 
+                <!-- Where / Location fields consolidated to input-location mostly, but keeping logic compatible -->
                 <div id="field-where" class="hidden">
                     <label id="label-where" class="block text-gray-600 mb-1 font-bold">Location</label>
                     <input type="text" id="input-where" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Location name..." oninput="updateWeatherDisplay()">
@@ -384,10 +411,18 @@
                     <label class="block text-gray-600 mb-1 font-bold">Restaurant</label>
                     <input type="text" id="input-restaurant" class="w-full border border-gray-300 rounded-lg p-3" placeholder="Restaurant name...">
                 </div>
+                
+                <!-- General Location Field (For To Eat, To Do, To Buy, Recurring) -->
                 <div id="field-location" class="hidden">
                     <label class="block text-gray-600 mb-1 font-bold">Location</label>
                     <input type="text" id="input-location" class="w-full border border-gray-300 rounded-lg p-3" placeholder="e.g. Downtown" oninput="updateWeatherDisplay()">
                     <div id="weather-display-eat" class="mt-2 text-[#4169E1] font-bold hidden flex items-center gap-2"></div>
+                </div>
+
+                <!-- Google Maps Link Field -->
+                <div id="field-maps-link" class="hidden">
+                    <label class="block text-gray-600 mb-1 font-bold">Google Maps Link</label>
+                    <input type="url" id="input-maps-link" class="w-full border border-gray-300 rounded-lg p-3" placeholder="https://maps.google.com/...">
                 </div>
 
                 <div>
@@ -447,11 +482,11 @@
         // 🔥 請填入您的 Firebase 設定 🔥
         const firebaseConfig = {
             apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
-            authDomain: "wiilc-family.firebaseapp.com",
-            projectId: "wiilc-family",
-            storageBucket: "wiilc-family.firebasestorage.app",
-            messagingSenderId: "855894103830",
-            appId: "1:855894103830:web:12245d01c942ed803ba237"
+    authDomain: "wiilc-family.firebaseapp.com",
+    projectId: "wiilc-family",
+    storageBucket: "wiilc-family.firebasestorage.app",
+    messagingSenderId: "855894103830",
+    appId: "1:855894103830:web:12245d01c942ed803ba237"
         };
 
         function initApp() {
@@ -530,7 +565,6 @@
             }
         }
 
-        // --- Calculate Recurring Total ---
         function calculateRecurringTotal() {
             if (currentTab !== 'recurring') {
                 document.getElementById('recurring-summary').classList.add('hidden');
@@ -561,7 +595,6 @@
             });
 
             const formattedTotal = new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(monthlyTotal);
-            
             document.getElementById('recurring-total-display').textContent = `Average Payment NZ$${formattedTotal} / mo`;
             document.getElementById('recurring-summary').classList.remove('hidden');
         }
@@ -725,7 +758,7 @@
             if (currentTab === 'togo') {
                 displayDiv = document.getElementById('weather-display');
                 locationVal = document.getElementById('input-where').value;
-            } else if (currentTab === 'toeat') {
+            } else if (currentTab === 'toeat' || currentTab === 'todo' || currentTab === 'tobuy' || currentTab === 'recurring') {
                 displayDiv = document.getElementById('weather-display-eat');
                 locationVal = document.getElementById('input-location').value;
             } else {
@@ -774,10 +807,10 @@
                 emptyState.classList.add('hidden');
                 
                 filteredItems.forEach((item) => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'transition-colors border-b border-gray-100';
-                    tr.onclick = (e) => {
-                        if (!e.target.closest('.btn-link')) {
+                    const div = document.createElement('div');
+                    div.className = 'item-card'; // Use card class instead of tr styling
+                    div.onclick = (e) => {
+                        if (!e.target.closest('.btn-link') && !e.target.closest('.btn-map-link')) {
                             openEditModal(item.id, item.sourceCollection);
                         }
                     };
@@ -799,7 +832,6 @@
                     
                     if (item.tab === 'recurring') {
                         if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
-                        // 🔥 V1.12 Update: Removed dollar icon, only display NZ$
                         if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
                     } else {
                         if (item.deadline) {
@@ -815,6 +847,13 @@
                                 const temp = weatherText.split(' ')[1];
                                 weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
                             }
+                            // Simplified weather check for other tabs using location
+                            else if (item.location) {
+                                const weatherText = getWeatherEmoji(item.deadline, item.location);
+                                const emoji = weatherText.split(' ')[0];
+                                const temp = weatherText.split(' ')[1];
+                                weatherHtml = `<span title="${weatherText}">${emoji} ${temp}</span>`;
+                            }
                             
                             const iconClass = (item.tab === 'togo' || item.tab === 'toeat') ? 'fa-plane-departure' : 'fa-calendar-alt';
                             detailsHtml += `<span><i class="fas ${iconClass} mr-1"></i> ${formatDate(item.deadline)} ${weatherHtml}</span>`;
@@ -827,19 +866,23 @@
                         if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
                     }
                     
+                    // Maps Link (New Icon)
+                    if (item.mapsLink) {
+                        detailsHtml += `<a href="${item.mapsLink}" target="_blank" class="btn-map-link"><i class="fas fa-map-marker-alt"></i> Map</a>`;
+                    }
+
+                    // Regular URL Link
                     if (item.url) {
                         detailsHtml += `<a href="${item.url}" target="_blank" class="btn-link"><i class="fas fa-link"></i> Link</a>`;
                     }
                     detailsHtml += '</div>';
 
-                    tr.innerHTML = `
-                        <td>
-                            ${topRow}
-                            ${titleRow}
-                            ${detailsHtml}
-                        </td>
+                    div.innerHTML = `
+                        ${topRow}
+                        ${titleRow}
+                        ${detailsHtml}
                     `;
-                    container.appendChild(tr);
+                    container.appendChild(div);
                 });
             }
         }
@@ -853,7 +896,7 @@
             const tabName = getTabDisplayName(currentTab);
             
             document.getElementById('modal-title').textContent = 'Add Item';
-            document.getElementById('label-title').textContent = `${tabName} Title`;
+            document.getElementById('label-title').textContent = `${tabName} Heading`; // Title renamed to Heading in modal
             const saveBtn = document.getElementById('btn-save-new');
             saveBtn.textContent = `${tabName} Add Item`;
             saveBtn.classList.remove('hidden');
@@ -875,7 +918,7 @@
             setupFormFields(item.tab);
             
             const tabName = getTabDisplayName(item.tab);
-            document.getElementById('label-title').textContent = `${tabName} Title`;
+            document.getElementById('label-title').textContent = `${tabName} Heading`;
 
             const idInput = document.getElementById('item-id');
             idInput.value = item.id;
@@ -885,6 +928,7 @@
             document.getElementById('input-url').value = item.url || '';
             document.getElementById('input-content').value = item.content || '';
             document.getElementById('input-remark').value = item.remark || '';
+            document.getElementById('input-maps-link').value = item.mapsLink || ''; // Load mapsLink
 
             const itemWho = item.forWho || [];
             document.querySelectorAll('.select-chip').forEach(chip => {
@@ -929,30 +973,41 @@
         });
 
         function setupFormFields(tab) {
-            const fields = ['deadline', 'frequency', 'payment', 'where', 'restaurant', 'location'];
+            const fields = ['deadline', 'frequency', 'payment', 'where', 'restaurant', 'location', 'maps-link'];
             fields.forEach(f => document.getElementById(`field-${f}`).classList.add('hidden'));
 
+            // Default labels
             document.getElementById('label-where').textContent = 'Location';
             document.getElementById('label-url').textContent = 'URL';
             document.getElementById('label-deadline').textContent = 'Deadline (if any)';
 
-            if (tab === 'todo' || tab === 'tobuy') {
+            if (tab === 'todo') {
                 document.getElementById('field-deadline').classList.remove('hidden');
+                document.getElementById('field-location').classList.remove('hidden'); // Added Location
+                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
             } else if (tab === 'togo') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-where').classList.remove('hidden');
+                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
                 document.getElementById('label-where').textContent = 'Location';
-                document.getElementById('label-url').textContent = 'URL (Paste Google Maps Link)';
+                document.getElementById('label-url').textContent = 'URL'; // Renamed per request
                 document.getElementById('label-deadline').textContent = 'Departure Date (if any)';
             } else if (tab === 'toeat') {
                 document.getElementById('field-deadline').classList.remove('hidden');
                 document.getElementById('field-restaurant').classList.remove('hidden');
                 document.getElementById('field-location').classList.remove('hidden');
-                document.getElementById('label-url').textContent = 'URL (Paste Google Maps Link)';
+                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
+                document.getElementById('label-url').textContent = 'URL'; // Renamed per request
                 document.getElementById('label-deadline').textContent = 'Departure Date (if any)';
+            } else if (tab === 'tobuy') {
+                document.getElementById('field-deadline').classList.remove('hidden');
+                document.getElementById('field-location').classList.remove('hidden'); // Added Location
+                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
             } else if (tab === 'recurring') {
                 document.getElementById('field-frequency').classList.remove('hidden');
                 document.getElementById('field-payment').classList.remove('hidden');
+                document.getElementById('field-location').classList.remove('hidden'); // Added Location
+                document.getElementById('field-maps-link').classList.remove('hidden'); // Added Maps
             }
         }
 
@@ -980,6 +1035,7 @@
             document.getElementById('input-location').value = '';
             document.getElementById('input-frequency').value = '';
             document.getElementById('input-payment').value = '';
+            document.getElementById('input-maps-link').value = '';
             document.querySelectorAll('.select-chip').forEach(el => el.classList.remove('selected'));
         }
 
@@ -991,7 +1047,7 @@
         function saveNewItem() {
             if (!db) { alert("Please connect Firebase!"); return; }
             const title = document.getElementById('input-title').value.trim();
-            if (!title) { alert('Please enter a Title!'); return; }
+            if (!title) { alert('Please enter a Heading!'); return; }
 
             const newNumber = generateUniqueNumber();
             const collectionName = getCollectionNameByTab(currentTab);
@@ -1011,6 +1067,7 @@
                 where: document.getElementById('input-where').value,
                 restaurant: document.getElementById('input-restaurant').value,
                 location: document.getElementById('input-location').value,
+                mapsLink: document.getElementById('input-maps-link').value,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             }).then(() => closeModal()).catch(e => console.error(e));
         }
@@ -1031,7 +1088,8 @@
                 payment: document.getElementById('input-payment').value,
                 where: document.getElementById('input-where').value,
                 restaurant: document.getElementById('input-restaurant').value,
-                location: document.getElementById('input-location').value
+                location: document.getElementById('input-location').value,
+                mapsLink: document.getElementById('input-maps-link').value
             }).then(() => closeModal()).catch(e => console.error(e));
         }
 
