@@ -19,6 +19,7 @@
         /* 全局字體設定 */
         body {
             font-family: 'Quicksand', sans-serif;
+            /* Royal Blue 漸層背景 */
             background: linear-gradient(135deg, #4169E1 0%, #6495ED 100%);
             min-height: 100vh;
             color: #333;
@@ -68,7 +69,7 @@
         .btn-add-item:active { transform: scale(0.95); }
         .btn-add-item:hover { background: #D10068; border-color: #D10068; }
 
-        /* Find 按鈕 */
+        /* Find/Filter 按鈕 */
         .btn-find {
             background: white;
             color: #4169E1 !important;
@@ -95,7 +96,7 @@
             text-align: center;
             transition: all 0.2s;
         }
-        /* V1.15 Update: Active state uses Pink (#FF007F) */
+        /* Active state uses Pink (#FF007F) */
         .btn-region.active {
             background: #FF007F;
             border-color: #FF007F;
@@ -253,11 +254,11 @@
             font-size: 12px !important;
             line-height: 1.2 !important;
             margin-top: 2px;
-            word-wrap: break-word; /* Allow long words to wrap */
-            word-break: normal;    /* V1.17 Fix: Prevent breaking in middle of words */
+            word-wrap: break-word; 
+            word-break: normal;
         }
         .text-red-holiday {
-            color: #ef4444; /* Tailwind red-500 */
+            color: #ef4444; 
         }
         .text-black-day {
             color: #333;
@@ -272,7 +273,8 @@
     <nav id="navbar" class="fixed top-0 w-full z-50 px-4 py-3">
         <div class="max-w-6xl mx-auto relative">
             <div class="flex items-center justify-between">
-                <div class="font-bold text-[#4169E1] text-xl flex-shrink-0 z-10">WiilC Family</div>
+                <!-- V1.18: Added cursor-pointer and onclick reload -->
+                <div class="font-bold text-[#4169E1] text-xl flex-shrink-0 z-10 cursor-pointer" onclick="location.reload()">WiilC Family</div>
                 <div class="md:hidden font-bold text-gray-600 truncate px-2 absolute left-1/2 transform -translate-x-1/2" id="mobile-page-title">🗓️ HK／NZ Holiday</div>
                 <button class="md:hidden text-[#4169E1] p-2 focus:outline-none z-10" onclick="toggleMobileMenu()">
                     <i class="fas fa-bars text-2xl"></i>
@@ -314,7 +316,8 @@
                 <!-- Find Button (Hidden on Calendar) -->
                 <div id="desktop-find-container">
                     <button onclick="toggleFindDropdown(this)" id="btn-find-desktop" class="btn-find">
-                        <i class="fas fa-filter"></i> <span id="find-label-d">Find: All</span>
+                        <!-- V1.18: Find -> Filter -->
+                        <i class="fas fa-filter"></i> <span id="find-label-d">Filter: All</span>
                     </button>
                     <div id="find-dropdown-d" class="find-dropdown-menu hidden absolute top-12 left-0 w-48 bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-50">
                         <div class="find-option active" onclick="setFilter('All')">All</div>
@@ -345,7 +348,8 @@
         <div class="md:hidden mb-4 flex gap-2">
             <div class="relative flex-1" id="mobile-find-container">
                 <button onclick="toggleFindDropdown(this)" id="btn-find-mobile" class="btn-find w-full justify-center">
-                    <i class="fas fa-filter"></i> <span id="find-label-m">Find: All</span>
+                    <!-- V1.18: Find -> Filter -->
+                    <i class="fas fa-filter"></i> <span id="find-label-m">Filter: All</span>
                 </button>
                 <div id="find-dropdown-m" class="find-dropdown-menu hidden absolute top-12 left-0 w-full bg-white rounded-xl shadow-xl border border-gray-100 p-2 z-50">
                     <div class="find-option active" onclick="setFilter('All')">All</div>
@@ -407,7 +411,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.17
+            V1.18
         </div>
     </main>
 
@@ -509,9 +513,16 @@
                 <div class="pt-4 flex flex-col gap-3">
                     <button id="btn-save-new" onclick="saveNewItem()" class="btn-add-item w-full shadow-md">Add Item</button>
                     <div id="edit-buttons" class="hidden flex flex-col gap-3 w-full">
-                        <button onclick="confirmEdit()" class="btn-primary w-full shadow-md">Save Edit</button>
-                        <button id="btn-toggle-complete" onclick="toggleCompletion()" class="btn-success w-full shadow-md">Move to Completed</button>
-                        <button onclick="deleteItem()" class="btn-danger w-full shadow-md">Delete</button>
+                        <!-- V1.18: Updated buttons with icons and new text -->
+                        <button onclick="confirmEdit()" class="btn-primary w-full shadow-md flex justify-center items-center">
+                            <i class="fas fa-save mr-2"></i> Save Edit
+                        </button>
+                        <button id="btn-toggle-complete" onclick="toggleCompletion()" class="btn-success w-full shadow-md flex justify-center items-center">
+                            <i class="fas fa-arrow-right mr-2"></i> Move to Completed
+                        </button>
+                        <button onclick="deleteItem()" class="btn-danger w-full shadow-md flex justify-center items-center">
+                            <i class="fas fa-trash-alt mr-2"></i> Delete Item
+                        </button>
                     </div>
                 </div>
             </div>
@@ -528,10 +539,9 @@
         let currentCalendarDate = new Date();
         let currentCalendarRegion = 'HK'; 
 
-        // Public Holidays Data (2025-2026) - 🔥 V1.17 Data Update
+        // Public Holidays Data (2025-2026)
         const PUBLIC_HOLIDAYS = {
             'HK': {
-                // 2025
                 '2025-01-01': '元旦',
                 '2025-01-29': '農曆年初一',
                 '2025-01-30': '農曆年初二',
@@ -548,9 +558,9 @@
                 '2025-10-07': '中秋節翌日', 
                 '2025-10-29': '重陽節',
                 '2025-12-25': '聖誕節',
-                '2025-12-26': '聖誕節後第一個週日', // Corrected per user request
+                '2025-12-26': '聖誕節後第一個週日', 
                 // 2026 Prediction
-                '2026-01-01': '元旦', // Corrected
+                '2026-01-01': '元旦', 
                 '2026-02-17': '農曆年初一',
                 '2026-02-18': '農曆年初二',
                 '2026-02-19': '農曆年初三',
@@ -565,10 +575,9 @@
                 '2026-10-01': '國慶日',
                 '2026-10-19': '重陽節翌日',
                 '2026-12-25': '聖誕節',
-                '2026-12-26': '聖誕節後第一個週日' // Corrected
+                '2026-12-26': '聖誕節後第一個週日' 
             },
             'NZ': {
-                // 2025
                 '2025-01-01': "New Year's Day",
                 '2025-01-02': "Day after New Year's Day",
                 '2025-02-06': "Waitangi Day",
@@ -666,13 +675,13 @@
             items = Object.values(itemsDataStore).flat();
             renderList();
             calculateRecurringTotal();
-            
-            // Only handle "Loading" state here. "No items found" is handled by renderList
             if (currentTab !== 'calendar') {
                 const emptyState = document.getElementById('empty-state');
-                // Only show loading if we have ABSOLUTELY no items loaded yet (initial load)
                 if (items.length === 0) {
                     emptyState.textContent = "Loading items...";
+                    emptyState.classList.remove('hidden');
+                } else if (document.getElementById('list-container').children.length === 0) {
+                    emptyState.textContent = "No items found.";
                     emptyState.classList.remove('hidden');
                 }
             }
@@ -694,12 +703,9 @@
                 'movie': '🎬', 'cinema': '🍿',
                 'birthday': '🎂', 'party': '🎉'
             };
-            
-            // Check if title already starts with an emoji (simple regex)
             if (/^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u.test(title)) {
-                return ''; // Already has emoji
+                return ''; 
             }
-
             for (const key in map) {
                 if (lowerTitle.includes(key)) return map[key] + ' ';
             }
@@ -709,8 +715,6 @@
         // --- Calendar Logic ---
         function setCalendarRegion(region) {
             currentCalendarRegion = region;
-            
-            // Update UI buttons
             document.querySelectorAll('.btn-region').forEach(btn => btn.classList.remove('active'));
             if(region === 'HK') {
                 document.getElementById('btn-hk-d').classList.add('active');
@@ -729,53 +733,38 @@
 
         function renderCalendar() {
             if (currentTab !== 'calendar') return;
-
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-            
             document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`;
-            
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
             const daysInMonth = lastDay.getDate();
-            const startingDay = firstDay.getDay(); // 0 is Sunday
-            
+            const startingDay = firstDay.getDay(); 
             const calendarDaysDiv = document.getElementById('calendar-days');
             calendarDaysDiv.innerHTML = '';
-
-            // Blank days before start
             for (let i = 0; i < startingDay; i++) {
                 const blank = document.createElement('div');
                 blank.className = 'calendar-day bg-gray-50';
                 calendarDaysDiv.appendChild(blank);
             }
-
-            // Days
             const holidays = PUBLIC_HOLIDAYS[currentCalendarRegion];
-            
             for (let i = 1; i <= daysInMonth; i++) {
                 const dayDiv = document.createElement('div');
                 dayDiv.className = 'calendar-day';
-                
-                // Construct Date String YYYY-MM-DD
                 const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
                 const dateObj = new Date(year, month, i);
-                const dayOfWeek = dateObj.getDay(); // 0 = Sunday
-                
-                const holidayName = holidays[dateString]; // Look up name directly
+                const dayOfWeek = dateObj.getDay(); 
+                const holidayName = holidays[dateString]; 
                 const isSunday = (dayOfWeek === 0);
-                
                 let textColorClass = 'text-black-day';
                 let holidayText = '';
-
                 if (holidayName) {
                     textColorClass = 'text-red-holiday';
                     holidayText = `<div class="holiday-name">${holidayName}</div>`;
                 } else if (isSunday) {
                     textColorClass = 'text-red-holiday';
                 }
-
                 dayDiv.innerHTML = `<div class="day-number ${textColorClass}">${i}</div>${holidayText}`;
                 calendarDaysDiv.appendChild(dayDiv);
             }
@@ -821,8 +810,9 @@
 
         function setFilter(who) {
             currentFilter = who;
-            document.getElementById('find-label-d').textContent = `Find: ${who}`;
-            document.getElementById('find-label-m').textContent = `Find: ${who}`;
+            // V1.18: Find -> Filter
+            document.getElementById('find-label-d').textContent = `Filter: ${who}`;
+            document.getElementById('find-label-m').textContent = `Filter: ${who}`;
             document.querySelectorAll('.find-option').forEach(opt => {
                 if(opt.textContent === who) opt.classList.add('active');
                 else opt.classList.remove('active');
@@ -927,7 +917,6 @@
                 calendarView.classList.remove('hidden');
                 listView.classList.add('hidden');
                 versionFooter.classList.add('hidden');
-                // 🔥 V1.17 Fix: Ensure empty-state is hidden in calendar mode
                 emptyState.classList.add('hidden');
                 
                 renderCalendar();
@@ -1019,7 +1008,6 @@
             const emptyState = document.getElementById('empty-state');
             container.innerHTML = '';
             
-            // Force hide empty state initially before checking count
             emptyState.classList.add('hidden');
 
             let filteredItems = items.filter(item => {
@@ -1039,7 +1027,7 @@
                 emptyState.textContent = "No items found.";
                 emptyState.classList.remove('hidden');
             } else {
-                emptyState.classList.add('hidden'); // Ensure hidden if items exist
+                emptyState.classList.add('hidden'); 
                 
                 filteredItems.forEach((item) => {
                     const div = document.createElement('div');
@@ -1057,7 +1045,6 @@
                     if (item.tab === 'recurring') {
                         if (item.frequency) detailsHtml += `<span><i class="fas fa-sync-alt mr-1"></i> ${item.frequency}</span>`;
                         if (item.payment) detailsHtml += `<span class="text-green-600 font-bold">NZ$${item.payment}</span>`;
-                        // Updated: Show End Date if exists
                         if (item.endDate) detailsHtml += `<span class="text-gray-500 ml-2">End: ${formatDate(item.endDate)}</span>`;
                     } else {
                         if (item.deadline) {
@@ -1142,7 +1129,7 @@
             if (document.getElementById('input-restaurant')) document.getElementById('input-restaurant').value = item.restaurant || '';
             if (document.getElementById('input-location')) document.getElementById('input-location').value = item.location || '';
             if (document.getElementById('input-payment')) document.getElementById('input-payment').value = item.payment || '';
-            if (document.getElementById('input-enddate')) document.getElementById('input-enddate').value = item.endDate || ''; // Load End Date
+            if (document.getElementById('input-enddate')) document.getElementById('input-enddate').value = item.endDate || ''; 
 
             updateWeatherDisplay();
             document.getElementById('modal-title').textContent = 'Edit / View Item'; 
@@ -1150,11 +1137,12 @@
             document.getElementById('edit-buttons').classList.remove('hidden');
             const toggleBtn = document.getElementById('btn-toggle-complete');
             if (item.isCompleted) {
-                toggleBtn.textContent = 'Return Back';
-                toggleBtn.className = 'btn-success w-full shadow-md'; 
+                toggleBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Return Back';
+                toggleBtn.className = 'btn-success w-full shadow-md flex justify-center items-center'; 
             } else {
-                toggleBtn.textContent = 'Move to Completed';
-                toggleBtn.className = 'btn-success w-full shadow-md';
+                // V1.18: Updated icon to arrow-right
+                toggleBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i> Move to Completed';
+                toggleBtn.className = 'btn-success w-full shadow-md flex justify-center items-center';
             }
             
             // Scroll to top
