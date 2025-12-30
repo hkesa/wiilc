@@ -207,11 +207,11 @@
             width: 100%;
         }
 
-        /* MJ Record Table Styles */
+        /* MJ Record Styles */
         .mj-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px; /* Force scroll on small screens */
+            min-width: 800px; /* Force scroll */
         }
         .mj-table th, .mj-table td {
             border: 1px solid #eee;
@@ -224,32 +224,57 @@
             color: #4169E1;
             font-weight: bold;
         }
-        .mj-table tr:nth-child(even) {
-            background-color: #fcfcfc;
+        .mj-table .total-row {
+            background-color: #edf2ff;
+            color: #4169E1;
+            font-weight: bold;
         }
+        .mj-table tr:nth-child(even) { background-color: #fcfcfc; }
         
-        /* MJ Input Styles */
         .mj-input-group {
             display: flex;
             align-items: center;
             gap: 5px;
             margin-bottom: 8px;
         }
-        .mj-label {
-            width: 80px;
-            font-weight: bold;
-            color: #555;
-        }
-        .mj-sign-select {
-            background: #f3f4f6;
+        .mj-label { width: 80px; font-weight: bold; color: #555; }
+        
+        /* New +/- Buttons */
+        .mj-sign-btn {
+            width: 26px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 8px;
-            font-weight: bold;
+            background: white;
+            border-radius: 4px;
             cursor: pointer;
-            width: 50px;
-            text-align: center;
+            font-weight: bold;
+            color: #888;
         }
+        .mj-sign-btn.active {
+            background: #4169E1;
+            color: white;
+            border-color: #4169E1;
+        }
+
+        /* Guests Row Container */
+        .guests-row {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .guest-item {
+            flex: 0 0 auto;
+            width: 120px;
+            border: 1px solid #eee;
+            padding: 5px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .guest-item .mj-label { width: auto; display: block; margin-bottom: 2px; font-size: 14px !important; }
         
         /* Calendar Styles */
         .calendar-grid {
@@ -273,9 +298,7 @@
             border: 1px solid #eee;
             position: relative;
         }
-        .day-number {
-            font-weight: bold;
-        }
+        .day-number { font-weight: bold; }
         .holiday-name {
             font-size: 12px !important;
             line-height: 1.2 !important;
@@ -422,6 +445,10 @@
             <div class="overflow-x-auto">
                 <table class="mj-table">
                     <thead>
+                        <!-- V1.20: Total Row -->
+                        <tr class="total-row" id="mj-header-totals">
+                            <!-- Injected by JS -->
+                        </tr>
                         <tr>
                             <th>Date</th>
                             <th>S</th>
@@ -433,6 +460,8 @@
                             <th>Guest ①</th>
                             <th>Guest ②</th>
                             <th>Guest ③</th>
+                            <th>Guest ④</th>
+                            <th>Remark</th>
                         </tr>
                     </thead>
                     <tbody id="mj-list-container">
@@ -450,7 +479,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.19
+            V1.20
         </div>
     </main>
 
@@ -472,9 +501,9 @@
                 <div id="mj-form-container" class="hidden">
                     <!-- Calculator -->
                     <div class="bg-blue-50 p-4 rounded-xl mb-4">
-                        <label class="block text-gray-600 mb-1 font-bold text-sm">Mini Calculator (-200)</label>
+                        <label class="block text-gray-600 mb-1 font-bold text-sm">Calculator</label>
                         <div class="flex items-center gap-2">
-                            <input type="number" id="mj-calc-input" class="w-full border border-blue-200 rounded-lg p-2" placeholder="Enter score (e.g. 50)" oninput="calculateMjScore(this.value)">
+                            <input type="number" inputmode="numeric" id="mj-calc-input" class="w-full border border-blue-200 rounded-lg p-2" placeholder="Enter score (e.g. 50)" oninput="calculateMjScore(this.value)">
                             <div class="text-[#4169E1] font-bold text-xl whitespace-nowrap">→ <span id="mj-calc-result">0</span></div>
                         </div>
                     </div>
@@ -486,7 +515,13 @@
 
                     <!-- Players -->
                     <div id="mj-players-container">
-                        <!-- JS will inject player inputs: S, A, D, V, 銀姐, 潘, G1, G2, G3 -->
+                        <!-- JS will inject player inputs -->
+                    </div>
+                    
+                    <!-- Remark for MJ -->
+                    <div class="mj-input-group mt-2">
+                        <label class="mj-label">Remark</label>
+                        <input type="text" id="mj-remark" class="w-full border border-gray-300 rounded-lg p-2" placeholder="Optional">
                     </div>
 
                     <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
@@ -634,14 +669,17 @@
             'tobuy': 'To Buy',
             'recurring': 'Recurring',
             'completed': 'Completed',
-            'mjrecord': 'MJ Record' // New Collection
+            'mjrecord': 'MJ Record'
         };
 
         let itemsDataStore = {
             'To Do': [], 'To Go': [], 'To Eat': [], 'To Buy': [], 'Recurring': [], 'Completed': [], 'MJ Record': []
         };
         
-        const MJ_PLAYERS = ['S', 'A', 'D', 'V', '銀姐', '潘', 'Guest ①', 'Guest ②', 'Guest ③'];
+        // V1.20: MJ Players Updated
+        const MJ_PLAYERS = ['S', 'A', 'D', 'V', '銀姐', '潘'];
+        const MJ_GUESTS = ['Guest ①', 'Guest ②', 'Guest ③', 'Guest ④'];
+        const ALL_MJ_PLAYERS = [...MJ_PLAYERS, ...MJ_GUESTS];
 
         let db = null;
 
@@ -686,19 +724,49 @@
         function initMjForm() {
             const container = document.getElementById('mj-players-container');
             container.innerHTML = '';
+            
+            // Standard Players
             MJ_PLAYERS.forEach(player => {
                 const div = document.createElement('div');
                 div.className = 'mj-input-group';
                 div.innerHTML = `
                     <label class="mj-label">${player}</label>
-                    <select class="mj-sign-select" id="mj-sign-${player}" onchange="calculateMjTotal()">
-                        <option value="+">+</option>
-                        <option value="-">-</option>
-                    </select>
+                    <div class="flex gap-1 mr-2">
+                        <button type="button" class="mj-sign-btn active" data-player="${player}" data-sign="+" onclick="toggleSign('${player}', '+')">+</button>
+                        <button type="button" class="mj-sign-btn" data-player="${player}" data-sign="-" onclick="toggleSign('${player}', '-')">-</button>
+                    </div>
                     <input type="number" inputmode="numeric" id="mj-input-${player}" class="w-full border border-gray-300 rounded-lg p-2 bg-white" placeholder="0" oninput="calculateMjTotal()">
                 `;
                 container.appendChild(div);
             });
+
+            // Guests Row (One line for inputs)
+            const guestsRow = document.createElement('div');
+            guestsRow.className = 'guests-row mt-2';
+            MJ_GUESTS.forEach(guest => {
+                const item = document.createElement('div');
+                item.className = 'guest-item';
+                item.innerHTML = `
+                    <span class="mj-label text-xs">${guest}</span>
+                    <div class="flex gap-1 mb-1 justify-center">
+                        <button type="button" class="mj-sign-btn active" data-player="${guest}" data-sign="+" onclick="toggleSign('${guest}', '+')">+</button>
+                        <button type="button" class="mj-sign-btn" data-player="${guest}" data-sign="-" onclick="toggleSign('${guest}', '-')">-</button>
+                    </div>
+                    <input type="number" inputmode="numeric" id="mj-input-${guest}" class="w-full border border-gray-300 rounded-lg p-1 text-center bg-white" placeholder="0" oninput="calculateMjTotal()">
+                `;
+                guestsRow.appendChild(item);
+            });
+            container.appendChild(guestsRow);
+        }
+
+        function toggleSign(player, sign) {
+            // Update UI
+            const btns = document.querySelectorAll(`button[data-player="${player}"]`);
+            btns.forEach(b => {
+                if(b.dataset.sign === sign) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+            calculateMjTotal();
         }
 
         function calculateMjScore(val) {
@@ -711,11 +779,12 @@
 
         function calculateMjTotal() {
             let total = 0;
-            MJ_PLAYERS.forEach(player => {
-                const sign = document.getElementById(`mj-sign-${player}`).value;
+            ALL_MJ_PLAYERS.forEach(player => {
+                const plusBtn = document.querySelector(`button[data-player="${player}"][data-sign="+"]`);
+                const sign = plusBtn.classList.contains('active') ? 1 : -1;
                 const val = document.getElementById(`mj-input-${player}`).value;
                 if(val) {
-                    total += (sign === '+' ? 1 : -1) * parseInt(val);
+                    total += sign * parseInt(val);
                 }
             });
             document.getElementById('mj-total-sum').textContent = total;
@@ -741,11 +810,11 @@
             items = Object.values(itemsDataStore).flat();
             renderList();
             calculateRecurringTotal();
+            renderMjTotals(); // Update MJ Totals
             
             const emptyState = document.getElementById('empty-state');
             if (currentTab !== 'calendar') {
                 if (currentTab === 'mjrecord') {
-                    // Check table rows
                     if (document.getElementById('mj-list-container').children.length === 0) {
                         emptyState.textContent = "No records found.";
                         emptyState.classList.remove('hidden');
@@ -766,6 +835,32 @@
             } else {
                 emptyState.classList.add('hidden');
             }
+        }
+
+        // --- MJ Total Calculation for Table Header ---
+        function renderMjTotals() {
+            const mjItems = itemsDataStore['MJ Record'] || [];
+            const totals = {};
+            ALL_MJ_PLAYERS.forEach(p => totals[p] = 0);
+
+            mjItems.forEach(item => {
+                ALL_MJ_PLAYERS.forEach(p => {
+                    if(item.scores && item.scores[p]) {
+                        totals[p] += parseInt(item.scores[p]);
+                    }
+                });
+            });
+
+            const headerRow = document.getElementById('mj-header-totals');
+            let html = `<td>Total</td>`;
+            ALL_MJ_PLAYERS.forEach(p => {
+                const val = totals[p];
+                const colorClass = val >= 0 ? 'text-green-600' : 'text-red-500';
+                const sign = val > 0 ? '+' : '';
+                html += `<td class="${colorClass}">${sign}${val}</td>`;
+            });
+            html += `<td></td>`; // Remark column spacer
+            headerRow.innerHTML = html;
         }
 
         function switchTab(tabName) {
@@ -900,10 +995,13 @@
                     tr.onclick = () => openEditModal(item.id, 'MJ Record');
                     // item.scores is object {S: 10, A: 20...}
                     let tds = `<td>${item.date}</td>`;
-                    MJ_PLAYERS.forEach(p => {
+                    ALL_MJ_PLAYERS.forEach(p => {
                         const val = item.scores?.[p] || 0;
-                        tds += `<td>${val > 0 ? '+' : ''}${val}</td>`;
+                        const sign = val > 0 ? '+' : '';
+                        const colorClass = val > 0 ? 'text-green-600' : (val < 0 ? 'text-red-500' : 'text-gray-400');
+                        tds += `<td class="${colorClass}">${sign}${val}</td>`;
                     });
+                    tds += `<td class="text-gray-500 text-sm max-w-[100px] truncate">${item.remark || ''}</td>`;
                     tr.innerHTML = tds;
                     mjContainer.appendChild(tr);
                 });
@@ -1077,10 +1175,16 @@
                 idInput.dataset.collection = sourceCollection;
                 
                 document.getElementById('mj-date').value = item.date;
-                MJ_PLAYERS.forEach(p => {
+                document.getElementById('mj-remark').value = item.remark || '';
+                ALL_MJ_PLAYERS.forEach(p => {
                     const score = item.scores[p] || 0;
                     const sign = score >= 0 ? '+' : '-';
-                    document.getElementById(`mj-sign-${p}`).value = sign;
+                    // Update buttons
+                    const btns = document.querySelectorAll(`button[data-player="${p}"]`);
+                    btns.forEach(b => {
+                        if(b.dataset.sign === sign) b.classList.add('active');
+                        else b.classList.remove('active');
+                    });
                     document.getElementById(`mj-input-${p}`).value = Math.abs(score);
                 });
                 calculateMjTotal();
@@ -1124,6 +1228,7 @@
                     toggleBtn.innerHTML = '<i class="fas fa-undo mr-2"></i> Return Back';
                     toggleBtn.className = 'btn-success w-full shadow-md flex justify-center items-center'; 
                 } else {
+                    // V1.18: Updated icon to arrow-right
                     toggleBtn.innerHTML = '<i class="fas fa-arrow-right mr-2"></i> Move to Completed';
                     toggleBtn.className = 'btn-success w-full shadow-md flex justify-center items-center';
                 }
@@ -1214,8 +1319,13 @@
             document.getElementById('mj-calc-input').value = '';
             document.getElementById('mj-calc-result').textContent = '0';
             document.getElementById('mj-total-sum').textContent = '0';
-            MJ_PLAYERS.forEach(p => {
-                document.getElementById(`mj-sign-${p}`).value = '+';
+            document.getElementById('mj-remark').value = '';
+            ALL_MJ_PLAYERS.forEach(p => {
+                const btns = document.querySelectorAll(`button[data-player="${p}"]`);
+                btns.forEach(b => {
+                    if(b.dataset.sign === '+') b.classList.add('active');
+                    else b.classList.remove('active');
+                });
                 document.getElementById(`mj-input-${p}`).value = '';
             });
         }
@@ -1236,10 +1346,11 @@
                 if(!dateVal) { alert("Please select a date"); return; }
                 
                 const scores = {};
-                MJ_PLAYERS.forEach(p => {
-                    const sign = document.getElementById(`mj-sign-${p}`).value;
+                ALL_MJ_PLAYERS.forEach(p => {
+                    const plusBtn = document.querySelector(`button[data-player="${p}"][data-sign="+"]`);
+                    const sign = plusBtn.classList.contains('active') ? 1 : -1;
                     const val = document.getElementById(`mj-input-${p}`).value || 0;
-                    scores[p] = (sign === '+' ? 1 : -1) * parseInt(val);
+                    scores[p] = sign * parseInt(val);
                 });
                 
                 db.collection('MJ Record').doc(String(newNumber)).set({
@@ -1247,6 +1358,7 @@
                     tab: 'mjrecord', // Internal use
                     date: dateVal,
                     scores: scores,
+                    remark: document.getElementById('mj-remark').value,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 }).then(() => closeModal()).catch(e => console.error(e));
                 
@@ -1287,15 +1399,17 @@
             
             if (collectionName === 'MJ Record') {
                 const scores = {};
-                MJ_PLAYERS.forEach(p => {
-                    const sign = document.getElementById(`mj-sign-${p}`).value;
+                ALL_MJ_PLAYERS.forEach(p => {
+                    const plusBtn = document.querySelector(`button[data-player="${p}"][data-sign="+"]`);
+                    const sign = plusBtn.classList.contains('active') ? 1 : -1;
                     const val = document.getElementById(`mj-input-${p}`).value || 0;
-                    scores[p] = (sign === '+' ? 1 : -1) * parseInt(val);
+                    scores[p] = sign * parseInt(val);
                 });
                 
                 db.collection(collectionName).doc(id).update({
                     date: document.getElementById('mj-date').value,
-                    scores: scores
+                    scores: scores,
+                    remark: document.getElementById('mj-remark').value
                 }).then(() => closeModal()).catch(e => console.error(e));
             } else {
                 db.collection(collectionName).doc(id).update({
