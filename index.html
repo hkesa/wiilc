@@ -219,16 +219,24 @@
             text-align: center;
             white-space: nowrap;
         }
-        .mj-table th {
+        /* V1.23: Frozen Headers */
+        .mj-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 10;
             background-color: #f8faff;
             color: #4169E1;
             font-weight: bold;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Optional shadow for separation */
         }
+        
         .mj-table .total-row {
             background-color: #edf2ff;
             color: #4169E1;
             font-weight: bold;
         }
+        /* Sticky logic for total row requires exact top position, skipping for now as user asked for fields (header) */
+        
         .mj-table tr:nth-child(even) { background-color: #fcfcfc; }
         
         .mj-table th:last-child, .mj-table td:last-child {
@@ -237,13 +245,12 @@
             text-align: left;
         }
 
-        /* V1.22: MJ Input Group Tweaks */
         .mj-input-group {
             display: flex;
             align-items: center;
             gap: 5px;
             margin-bottom: 8px;
-            justify-content: flex-start; /* Reset to start for control */
+            justify-content: flex-start;
         }
         .mj-label { 
             min-width: 85px; 
@@ -256,7 +263,7 @@
             display: flex;
             gap: 2px;
             position: relative;
-            left: -13px; /* V1.22: Move buttons left 13px */
+            left: -6px; /* V1.23: Move right by 7px (from -13px to -6px) */
         }
 
         .mj-sign-btn {
@@ -278,11 +285,10 @@
             border-color: #4169E1;
         }
         
-        /* V1.22: Score Input margin-left 13px */
         .mj-score-input {
             width: 80px; 
             text-align: center;
-            margin-left: 13px; 
+            margin-left: 20px; /* V1.23: Move right by 7px (from 13px to 20px) */
         }
 
         /* Calendar Styles */
@@ -318,10 +324,15 @@
         .text-red-holiday { color: #ef4444; }
         .text-black-day { color: #333; }
         
-        /* V1.22: Winner Green Border Class */
+        /* V1.22: Winner Green Border */
         .mj-winner-cell {
-            border: 2px solid #22c55e !important; /* Green-500 */
-            background-color: #f0fdf4 !important; /* Green-50 */
+            border: 2px solid #22c55e !important;
+            background-color: #f0fdf4 !important;
+        }
+        /* V1.23: Loser Red Border */
+        .mj-loser-cell {
+            border: 2px solid #ef4444 !important;
+            background-color: #fef2f2 !important;
         }
     </style>
 </head>
@@ -456,8 +467,9 @@
         </div>
 
         <!-- MJ Record Table View -->
-        <div id="mj-record-view" class="hidden glass-card p-0 mb-6 overflow-hidden">
-            <div class="overflow-x-auto">
+        <div id="mj-record-view" class="hidden glass-card p-0 mb-6">
+            <!-- V1.23: Added max-height for sticky header scrolling -->
+            <div class="overflow-auto max-h-[70vh]">
                 <table class="mj-table">
                     <thead>
                         <tr class="total-row" id="mj-header-totals">
@@ -493,7 +505,7 @@
         </div>
         
         <div id="version-footer" class="hidden text-center py-4 text-white text-opacity-80 text-sm font-bold">
-            V1.22
+            V1.23
         </div>
     </main>
 
@@ -527,20 +539,21 @@
                         <input type="date" id="mj-date" class="w-full border border-gray-300 rounded-lg p-2 bg-white appearance-none">
                     </div>
 
-                    <!-- Players (V1.22: Tweaked layout) -->
+                    <!-- Players -->
                     <div id="mj-players-container">
                         <!-- JS will inject player inputs -->
                     </div>
                     
-                    <!-- Remark for MJ (V1.22: Textarea with resize-y) -->
-                    <div class="mt-2">
-                        <label class="block text-gray-600 mb-1 font-bold">Remark</label>
-                        <textarea id="mj-remark" class="w-full border border-gray-300 rounded-lg p-2 resize-y" placeholder="Optional" rows="1"></textarea>
+                    <!-- Sum Display (V1.23: Moved below guests) -->
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg border border-gray-200 mb-2">
+                        <span class="font-bold text-lg">Sum：</span>
+                        <span id="mj-total-sum" class="font-bold text-xl text-[#4169E1]">0</span>
                     </div>
 
-                    <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-                        <span class="font-bold text-lg">Total Sum:</span>
-                        <span id="mj-total-sum" class="font-bold text-xl text-[#4169E1]">0</span>
+                    <!-- Remark for MJ (V1.23: 3 rows) -->
+                    <div class="mt-2">
+                        <label class="block text-gray-600 mb-1 font-bold">Remark</label>
+                        <textarea id="mj-remark" class="w-full border border-gray-300 rounded-lg p-2 resize-y" placeholder="Optional" rows="3"></textarea>
                     </div>
                 </div>
 
@@ -696,12 +709,12 @@
         let db = null;
 
         const firebaseConfig = {
-            apiKey: "AIzaSyC5A3HUWwkH1mFU0u7mzkdLXFJ3BlYiaTI",
-    authDomain: "wiilc-family.firebaseapp.com",
-    projectId: "wiilc-family",
-    storageBucket: "wiilc-family.firebasestorage.app",
-    messagingSenderId: "855894103830",
-    appId: "1:855894103830:web:12245d01c942ed803ba237"
+            apiKey: "請填入您的API_KEY",
+            authDomain: "請填入您的PROJECT_ID.firebaseapp.com",
+            projectId: "請填入您的PROJECT_ID",
+            storageBucket: "請填入您的PROJECT_ID.appspot.com",
+            messagingSenderId: "請填入您的MESSAGING_SENDER_ID",
+            appId: "請填入您的APP_ID"
         };
 
         function initApp() {
@@ -991,19 +1004,16 @@
                     
                     let tds = `<td>${item.date}</td>`;
                     
-                    // V1.22: Green Border Logic
-                    // Count negatives and positives for this row
+                    // V1.23: Red Border (1 neg, 3 pos) & Green Border (3 neg, 1 pos) Logic
                     let negCount = 0;
                     let posCount = 0;
                     let posPlayer = null;
+                    let negPlayer = null;
 
                     ALL_MJ_PLAYERS.forEach(p => {
                         const val = item.scores?.[p] || 0;
-                        if (val < 0) negCount++;
-                        if (val > 0) {
-                            posCount++;
-                            posPlayer = p; // Track who is the positive winner
-                        }
+                        if (val < 0) { negCount++; negPlayer = p; }
+                        if (val > 0) { posCount++; posPlayer = p; }
                     });
 
                     // Render cells
@@ -1012,10 +1022,14 @@
                         const sign = val > 0 ? '+' : '';
                         const colorClass = val > 0 ? 'text-green-600' : (val < 0 ? 'text-red-500' : 'text-gray-400');
                         
-                        // Check if this cell deserves the green border
                         let cellClass = "";
+                        // Green Border: 3 negs, 1 pos -> Winner gets green
                         if (negCount === 3 && posCount === 1 && p === posPlayer) {
                             cellClass = "mj-winner-cell";
+                        }
+                        // Red Border: 1 neg, 3 pos -> Loser gets red
+                        else if (negCount === 1 && posCount === 3 && p === negPlayer) {
+                            cellClass = "mj-loser-cell";
                         }
 
                         tds += `<td class="${colorClass} ${cellClass}">${sign}${val}</td>`;
